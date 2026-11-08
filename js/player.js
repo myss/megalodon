@@ -216,7 +216,9 @@ const Player = {
     }
     if (this.airborne && this.pos.y < surfaceY && this.vel.y < 0) {
       this.airborne = false;
-      this.vel.multiplyScalar(0.5);
+      this.vel.multiplyScalar(0.7);
+      // Suya burnunun gösterdiği yönde dalmaya devam etsin, hemen yüzeye geri dönmesin
+      this.pitch = clamp(Math.atan2(this.vel.y, Math.hypot(this.vel.x, this.vel.z)), -0.6, 0);
       Effects.splash(new THREE.Vector3(this.pos.x, WATER_Y, this.pos.z), true);
       Sound.splash();
     }
