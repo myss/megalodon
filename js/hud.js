@@ -105,7 +105,7 @@ const Hud = {
     }
     for (const e of Enemies.list) {
       if (e.pos.distanceTo(Player.pos) > 150) continue;
-      g.fillStyle = e.type.passive ? '#9fe0ff' : e.type.boss ? '#ff00ff' : '#ff4040';
+      g.fillStyle = e.type.passive ? '#9fe0ff' : e.type.boss ? '#ff00ff' : e.type.neutral ? '#ffaa40' : e.type.drifter ? '#e08cff' : '#ff4040';
       g.beginPath(); g.arc(mx(e.pos.x), my(e.pos.z), e.type.boss ? 4.5 : 3, 0, Math.PI * 2); g.fill();
     }
     const blink = Math.floor(performance.now() / 400) % 2 === 0;

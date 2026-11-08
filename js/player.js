@@ -26,7 +26,7 @@ const Player = {
   yaw: 0, pitch: 0, roll: 0, visPitch: 0,
   level: 1, xp: 0,
   hp: 100, maxHp: 100, hunger: 100, stamina: 100,
-  scale: 1, damage: 18,
+  scale: 1, speedMul: 1, damage: 18,
   biteCd: 0, biteAnim: 0, lungeCd: 0, lungeTimer: 0,
   airborne: false, beached: false, stealthy: false, sprinting: false,
   hurtFlash: 0, swimPhase: 0, dead: false, beachMsgCd: 0,
@@ -42,7 +42,9 @@ const Player = {
   },
 
   recalc() {
-    this.scale = Math.min(1 + (this.level - 1) * 0.07, 2.4);
+    // Megalodon başından beri okyanusun en büyüğü; seviyeyle daha da büyür
+    this.scale = Math.min(1.8 + (this.level - 1) * 0.06, 3.2);
+    this.speedMul = 1 + (this.scale - 1) * 0.4;
     this.maxHp = 100 + (this.level - 1) * 20;
     this.damage = 18 + (this.level - 1) * 5;
     this.model.group.scale.setScalar(this.scale);
@@ -143,7 +145,7 @@ const Player = {
     this.sprinting = !!(k.ShiftLeft || k.ShiftRight) && !!k.KeyW && this.stamina > 1 && !sneaking;
     let target = 0;
     if (k.KeyW) target = sneaking ? 5 : this.sprinting ? 25 : 12;
-    target *= 1 + (this.scale - 1) * 0.4;
+    target *= this.speedMul;
 
     if (Input.pressed.Space && this.lungeCd <= 0 && this.stamina >= 20 && !this.airborne && !this.beached) this.lunge();
     if (Input.clicked && this.biteCd <= 0) {
@@ -214,7 +216,7 @@ const Player = {
     this.biteAnim -= dt;
     this.hurtFlash -= dt;
     const speed = this.vel.length();
-    this.stealthy = speed < 7 && !this.airborne && !this.beached && this.lungeTimer <= 0;
+    this.stealthy = speed < 7 * this.speedMul &&!this.airborne && !this.beached && this.lungeTimer <= 0;
 
     if (this.sprinting) this.stamina = Math.max(0, this.stamina - 18 * dt);
     else if (this.lungeTimer <= 0) this.stamina = Math.min(100, this.stamina + 15 * dt);

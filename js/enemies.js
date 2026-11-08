@@ -1,32 +1,51 @@
-// Deniz düşmanları ve barışçıl deniz canlıları
+// Deniz düşmanları ve barışçıl deniz canlıları.
+// Hepsi megalodondan küçüktür. Bayraklar:
+//   passive: hiç saldırmaz, kaçar · neutral: sadece ısırılınca saldırır
+//   drifter: yavaş süzülür, değince sokar · bottom: deniz tabanında gezer · deep: derin suda doğar
+//   boss: aynı anda en fazla bir tane
 const ENEMY_TYPES = {
   beyaz: {
     name: 'Büyük Beyaz Köpekbalığı', hp: 70, dmg: 8, speed: 13, aggro: 40, size: 0.65, radius: 2.4,
-    xp: 40, food: 25, minLevel: 1, weight: 4,
+    xp: 40, food: 25, minLevel: 1, weight: 2,
     build: () => buildShark({ top: 0x7a8792, belly: 0xf0f0ea }),
   },
   cekic: {
     name: 'Çekiç Başlı Köpekbalığı', hp: 55, dmg: 7, speed: 14, aggro: 35, size: 0.55, radius: 2.2,
-    xp: 35, food: 20, minLevel: 1, weight: 3,
+    xp: 35, food: 20, minLevel: 1, weight: 1,
     build: () => buildShark({ top: 0x8a8a70, belly: 0xe8e6d0, hammer: true }),
   },
   barakuda: {
     name: 'Barakuda', hp: 25, dmg: 4, speed: 15, aggro: 30, size: 1.2, radius: 1.5,
-    xp: 15, food: 10, minLevel: 1, weight: 3,
+    xp: 15, food: 10, minLevel: 1, weight: 2,
     build: () => buildBigFish({ top: 0x6f8590, belly: 0xdfe8ec, w: 0.35, h: 0.45, l: 2.6, jaw: true }),
   },
-  murekkep: {
-    name: 'Dev Mürekkep Balığı', hp: 130, dmg: 11, speed: 8, aggro: 30, size: 1.0, radius: 3,
-    xp: 70, food: 40, minLevel: 2, weight: 2,
+  kalamar: {
+    name: 'Dev Kalamar', hp: 130, dmg: 11, speed: 9, aggro: 35, size: 1.0, radius: 3,
+    xp: 70, food: 40, minLevel: 1, weight: 3, deep: true,
     build: buildSquid,
   },
+  ahtapot: {
+    name: 'Dev Ahtapot', hp: 90, dmg: 9, speed: 7, aggro: 25, size: 1.1, radius: 2.8,
+    xp: 55, food: 35, minLevel: 1, weight: 2, bottom: true,
+    build: buildOctopus,
+  },
+  denizanasi: {
+    name: 'Denizanası', hp: 12, dmg: 5, speed: 1.5, aggro: 0, size: 1.0, radius: 1.6,
+    xp: 8, food: 3, minLevel: 1, weight: 3, drifter: true,
+    build: buildJelly,
+  },
   orka: {
-    name: 'Katil Balina', hp: 200, dmg: 15, speed: 15, aggro: 50, size: 0.95, radius: 3.6,
-    xp: 110, food: 60, minLevel: 3, weight: 2,
+    name: 'Katil Balina', hp: 170, dmg: 13, speed: 15, aggro: 50, size: 0.95, radius: 3.6,
+    xp: 100, food: 60, minLevel: 1, weight: 2,
     build: () => buildShark({ top: 0x14181c, belly: 0xf4f4f4, dorsalH: 3.8, orca: true }),
   },
+  kasalot: {
+    name: 'Kaşalot Balinası', hp: 320, dmg: 18, speed: 10, aggro: 0, size: 0.85, radius: 4.2,
+    xp: 180, food: 100, minLevel: 2, weight: 1, neutral: true,
+    build: buildWhale,
+  },
   mozasor: {
-    name: 'Mozasor', hp: 450, dmg: 24, speed: 15, aggro: 60, size: 1.2, radius: 5,
+    name: 'Mozasor', hp: 450, dmg: 24, speed: 15, aggro: 60, size: 0.75, radius: 3.5,
     xp: 300, food: 100, minLevel: 5, weight: 1, boss: true,
     build: buildMosasaurus,
   },
@@ -74,11 +93,13 @@ class Enemy {
     const d = toP.length();
 
     // Ne yapacağına karar ver
-    if (T.passive) {
+    if (T.drifter) {
+      this.state = 'wander';
+    } else if (T.passive) {
       this.state = d < 22 || this.angry ? 'flee' : 'wander';
       if (d > 60) this.angry = false;
     } else {
-      const range = T.aggro * (Player.stealthy ? 0.5 : 1);
+      const range = T.neutral ? 0 : T.aggro * (Player.stealthy ? 0.5 : 1);
       if (this.hp < this.maxHp * 0.2 && !T.boss) this.state = 'flee';
       else if (!Player.dead && (this.angry || d < range) && d < 100) this.state = 'chase';
       else this.state = 'wander';
@@ -95,8 +116,9 @@ class Enemy {
     } else {
       if (this.pos.distanceTo(this.wanderTarget) < 5) this.wanderTarget = randomWaterPos(8, this.pos, 20, 60);
       dir = this.wanderTarget.clone().sub(this.pos).normalize();
-      speed = T.speed * 0.4;
+      speed = T.drifter ? T.speed : T.speed * 0.4;
     }
+    if (T.drifter || T.bottom) dir.y *= 0.3;
 
     const wantYaw = Math.atan2(dir.x, dir.z);
     const wantPitch = clamp(Math.asin(clamp(dir.y, -1, 1)), -0.8, 0.8);
@@ -115,6 +137,7 @@ class Enemy {
     }
     const g2 = terrainHeight(this.pos.x, this.pos.z);
     this.pos.y = clamp(this.pos.y, g2 + 1.5 * this.type.size + 1, WATER_Y - 1.2);
+    if (T.bottom && this.state !== 'chase') this.pos.y = lerp(this.pos.y, g2 + 1.2, 1 - Math.exp(-dt * 2));
     if (Math.hypot(this.pos.x, this.pos.z) > WORLD_LIMIT) this.wanderTarget = randomWaterPos(8);
 
     // Megalodonun içine girme
@@ -124,7 +147,8 @@ class Enemy {
     // Saldırı
     this.attackCd -= dt;
     this.attackAnim -= dt;
-    if (this.state === 'chase' && d < minD + 2.5 && this.attackCd <= 0) {
+    const touching = T.drifter ? d < minD + 0.5 : this.state === 'chase' && d < minD + 2.5;
+    if (touching && this.attackCd <= 0) {
       this.attackCd = 1.4;
       this.attackAnim = 0.35;
       Player.hurt(T.dmg);
@@ -136,7 +160,8 @@ class Enemy {
   updateModel(dt, t, speed) {
     const m = this.model;
     m.group.position.copy(this.pos);
-    m.group.rotation.set(-this.pitch, this.yaw, 0);
+    const flat = this.type.drifter || this.type.bottom;
+    m.group.rotation.set(flat ? 0 : -this.pitch, this.yaw, 0);
     this.phase += dt * (2 + speed * 0.4);
     if (m.tail) m.tail.rotation[m.tailAxis] = Math.sin(this.phase) * 0.35;
     if (m.jaw) {
@@ -154,14 +179,36 @@ class Enemy {
     if (m.flippers) {
       m.flippers.forEach((f) => { f.rotation.z = Math.sin(this.phase * 0.5) * 0.4 * f.userData.s; });
     }
+    if (m.arms) {
+      // Kollar dalgalanır, saldırırken ileri uzanır
+      m.arms.forEach((arm) => {
+        const i = arm.userData.i;
+        const reach = this.attackAnim > 0 ? -0.6 : 0;
+        arm.rotation.x = 0.35 + Math.sin(this.phase * 0.5 + i * 0.8) * 0.25 + (i < 2 || i > 6 ? reach : 0);
+      });
+    }
+    if (m.dome) {
+      // Denizanası atım atım süzülür
+      const pulse = Math.sin(this.phase * 0.8);
+      m.dome.scale.set(1 + pulse * 0.12, 1 - pulse * 0.15, 1 + pulse * 0.12);
+      m.jellyTentacles.forEach((tt, i) => {
+        tt.rotation.x = Math.sin(this.phase * 0.5 + i) * 0.2;
+        tt.rotation.z = Math.cos(this.phase * 0.4 + i) * 0.2;
+      });
+    }
   }
 
   hurt(n) {
     this.hp -= n;
     this.angry = true;
-    Effects.blood(this.pos, 10);
+    Effects.blood(this.pos, this.type.drifter ? 2 : 10);
     Hud.float('-' + Math.round(n), this.pos, '#ffdd55');
     Sound.hit();
+    if (this.type.drifter && this.attackCd <= 0) {
+      this.attackCd = 1.4;
+      Hud.msg('Denizanası seni soktu!');
+      Player.hurt(this.type.dmg);
+    }
     if (this.hp <= 0) this.die();
   }
 
@@ -188,7 +235,7 @@ const Enemies = {
     for (let i = 0; i < this.wanted(); i++) this.spawn(true);
   },
 
-  wanted() { return Math.min(10 + Player.level, 20); },
+  wanted() { return Math.min(14 + Player.level, 24); },
 
   spawn(initial) {
     const lvl = Player.level;
@@ -201,9 +248,9 @@ const Enemies = {
     let total = pool.reduce((s, k) => s + ENEMY_TYPES[k].weight, 0);
     let r = Math.random() * total, key = pool[0];
     for (const k of pool) { r -= ENEMY_TYPES[k].weight; if (r <= 0) { key = k; break; } }
-    const minDepth = key === 'murekkep' ? 22 : 10;
-    const pos = randomWaterPos(minDepth, Player.pos, initial ? 50 : 90, initial ? 250 : 200);
-    if (key === 'murekkep') pos.y = terrainHeight(pos.x, pos.z) + 5;
+    const T = ENEMY_TYPES[key];
+    const pos = randomWaterPos(T.deep ? 22 : 10, Player.pos, initial ? 50 : 90, initial ? 250 : 200);
+    if (T.deep || T.bottom) pos.y = terrainHeight(pos.x, pos.z) + (T.deep ? 5 : 1.5);
     const e = new Enemy(this.scene, key, pos);
     if (e.type.boss) Hud.msg('Dikkat! Bir MOZASOR yakınlarda!');
     this.list.push(e);
