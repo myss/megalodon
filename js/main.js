@@ -65,13 +65,13 @@ const Game = {
 
 // Kurulum
 Save.load();
+Hud.init();
 World.init(scene);
 Effects.init(scene);
 Player.init(scene);
 Fish.init(scene);
 Enemies.init(scene);
 Land.init(scene);
-Hud.init();
 camera.position.copy(Player.pos).add(new THREE.Vector3(0, 4, -15));
 
 function showSaveInfo() {
