@@ -51,7 +51,7 @@ class LandAnimal {
   notice(dt) {
     const d = this.pos.distanceTo(Player.pos);
     let rate = 0;
-    if (Player.airborne || Player.beached) rate = d < 45 ? 3 : 0;
+    if (Player.airborne || Player.beached || Player.flying) rate = d < 45 ? 3 : 0;
     else if (Player.stealthy) rate = d < 8 ? 0.8 : 0;
     else rate = d < 35 ? (Player.sprinting ? 2.2 : 1.1) : 0;
     if (rate > 0) this.alert += rate * dt;

@@ -17,6 +17,7 @@ const Input = {
 
 const SPAWN = new THREE.Vector3(0, -8, 40);
 const MOUSE_SENS = 0.0024;
+const MAX_FLY_Y = 160;
 
 const Player = {
   model: null,
@@ -28,7 +29,7 @@ const Player = {
   hp: 100, maxHp: 100, hunger: 100, stamina: 100,
   scale: 1, speedMul: 1, damage: 18,
   biteCd: 0, biteAnim: 0, lungeCd: 0, lungeTimer: 0,
-  airborne: false, beached: false, stealthy: false, sprinting: false,
+  airborne: false, flying: false, beached: false, stealthy: false, sprinting: false,
   hurtFlash: 0, swimPhase: 0, dead: false, beachMsgCd: 0,
 
   init(scene) {
@@ -59,6 +60,7 @@ const Player = {
     this.hunger = 100;
     this.stamina = 100;
     this.airborne = false;
+    this.flying = false;
     this.dead = false;
   },
 
@@ -108,6 +110,21 @@ const Player = {
 
   radius() { return 2.0 * this.scale; },
 
+  startFlying() {
+    const fromWater = !this.airborne && !this.beached;
+    this.flying = true;
+    this.airborne = false;
+    this.vel.y = Math.max(this.vel.y, fromWater ? 14 : 4);
+    if (fromWater) Effects.splash(new THREE.Vector3(this.pos.x, WATER_Y, this.pos.z), true);
+    Sound.lunge();
+    Hud.msg('UÇUYORSUN! (F ile in)');
+  },
+
+  stopFlying() {
+    this.flying = false;
+    this.airborne = this.pos.y > WATER_Y;
+  },
+
   mouthPos(out) {
     return out.copy(this.pos).addScaledVector(this.fwd, 4.2 * this.scale);
   },
@@ -147,15 +164,30 @@ const Player = {
     if (k.KeyW) target = sneaking ? 5 : this.sprinting ? 25 : 12;
     target *= this.speedMul;
 
-    if (Input.pressed.Space && this.lungeCd <= 0 && this.stamina >= 20 && !this.airborne && !this.beached) this.lunge();
+    const surfaceY = WATER_Y - 0.5 * this.scale;
+    // Uçma: F ile (yüzeyde, havada ya da karada), ya da sudan fırlamışken Boşluk ile
+    const flyKey = Input.pressed.KeyF || (Input.pressed.Space && this.airborne);
+    if (flyKey) {
+      if (this.flying) this.stopFlying();
+      else if (this.stamina >= 15 && (this.airborne || this.beached || this.pos.y >= surfaceY - 1.5)) this.startFlying();
+    }
+    if (Input.pressed.Space && this.lungeCd <= 0 && this.stamina >= 20 && !this.airborne && !this.beached && !this.flying) this.lunge();
     if (Input.clicked && this.biteCd <= 0) {
       this.biteCd = 0.55;
       this.biteAnim = 0.35;
       Game.tryBite();
     }
 
-    const surfaceY = WATER_Y - 0.5 * this.scale;
-    if (this.airborne) {
+    if (this.flying) {
+      const flySpeed = (k.KeyW ? (this.sprinting ? 34 : 20) : 0) * this.speedMul;
+      this.vel.lerp(this.fwd.clone().multiplyScalar(flySpeed), 1 - Math.exp(-dt * 2));
+      this.stamina -= 4 * dt;
+      if (this.stamina <= 0) {
+        this.stamina = 0;
+        this.stopFlying();
+        Hud.msg('Enerjin bitti, düşüyorsun!');
+      }
+    } else if (this.airborne) {
       this.vel.y -= 30 * dt;
     } else {
       const desired = this.fwd.clone().multiplyScalar(target);
@@ -170,8 +202,18 @@ const Player = {
 
     this.pos.addScaledVector(this.vel, dt);
 
-    if (!this.airborne && this.pos.y > surfaceY) {
+    if (!this.airborne && !this.flying && this.pos.y > surfaceY) {
       this.pos.y = surfaceY;
+      if (this.vel.y > 0) this.vel.y = 0;
+    }
+    if (this.flying && this.pos.y < surfaceY && this.vel.y < 0) {
+      // Uçarken suya dalış
+      this.flying = false;
+      Effects.splash(new THREE.Vector3(this.pos.x, WATER_Y, this.pos.z), true);
+      Sound.splash();
+    }
+    if (this.pos.y > MAX_FLY_Y) {
+      this.pos.y = MAX_FLY_Y;
       if (this.vel.y > 0) this.vel.y = 0;
     }
     if (this.airborne && this.pos.y < surfaceY && this.vel.y < 0) {
@@ -189,7 +231,7 @@ const Player = {
       this.pos.y = minY;
       if (this.vel.y < 0) this.vel.y = 0;
       if (this.airborne) this.airborne = false;
-      if (minY > surfaceY + 0.3) this.beached = true;
+      if (minY > surfaceY + 0.3 && !this.flying) this.beached = true;
     }
     if (this.beached) {
       // Karaya vurdu: suya doğru kay, can azalır
@@ -216,10 +258,10 @@ const Player = {
     this.biteAnim -= dt;
     this.hurtFlash -= dt;
     const speed = this.vel.length();
-    this.stealthy = speed < 7 * this.speedMul &&!this.airborne && !this.beached && this.lungeTimer <= 0;
+    this.stealthy = speed < 7 * this.speedMul && !this.airborne && !this.beached && !this.flying && this.lungeTimer <= 0;
 
     if (this.sprinting) this.stamina = Math.max(0, this.stamina - 18 * dt);
-    else if (this.lungeTimer <= 0) this.stamina = Math.min(100, this.stamina + 15 * dt);
+    else if (this.lungeTimer <= 0 && !this.flying) this.stamina = Math.min(100, this.stamina + 15 * dt);
 
     this.hunger -= dt * (0.7 + (this.sprinting ? 0.8 : 0));
     if (this.hunger <= 0) {
@@ -230,7 +272,7 @@ const Player = {
       this.hp = Math.min(this.maxHp, this.hp + dt * (1.5 + this.level * 0.2));
     }
 
-    if (this.sprinting && Math.random() < dt * 12) Effects.bubbles(this.pos.clone().addScaledVector(this.fwd, -3 * this.scale), 2);
+    if (this.sprinting && this.pos.y < WATER_Y && Math.random() < dt * 12) Effects.bubbles(this.pos.clone().addScaledVector(this.fwd, -3 * this.scale), 2);
 
     this.updateModel(dt, speed, turnRate);
   },
@@ -248,6 +290,16 @@ const Player = {
     this.swimPhase += dt * (2 + speed * 0.35);
     const flap = this.beached ? 0.8 : 0.35;
     this.model.tail.rotation.y = Math.sin(this.swimPhase * (this.beached ? 2.5 : 1)) * flap;
+
+    // Uçarken yan yüzgeçler kanat gibi büyüyüp çırpar
+    this.wingPhase = (this.wingPhase || 0) + dt * 7;
+    const wingOpen = lerp(this.model.fins[0].scale.x, this.flying ? 2.2 : 1, 1 - Math.exp(-dt * 6));
+    for (const f of this.model.fins) {
+      const s = f.userData.s;
+      const lift = this.flying ? 0.9 + Math.sin(this.wingPhase) * 0.6 : 0;
+      f.rotation.z = -s * (Math.PI / 2 + 0.4) + s * lift;
+      f.scale.set(wingOpen, wingOpen, wingOpen);
+    }
 
     let jaw = 0.05;
     if (this.biteAnim > 0) jaw = Math.sin((1 - this.biteAnim / 0.35) * Math.PI) * 0.75;

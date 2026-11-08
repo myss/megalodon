@@ -63,9 +63,22 @@ const Hud = {
     this.el.hp.style.width = (100 * P.hp / P.maxHp) + '%';
     this.el.food.style.width = P.hunger + '%';
     this.el.stam.style.width = P.stamina + '%';
-    this.el.stealth.style.visibility = P.stealthy ? 'visible' : 'hidden';
-    const meters = Math.max(0, Math.round(-P.pos.y * DEPTH_TO_METERS / 10) * 10);
-    this.el.depth.textContent = 'Derinlik: ' + meters.toLocaleString('tr-TR') + ' m';
+    const st = this.el.stealth;
+    if (P.flying) {
+      st.textContent = 'UÇUYORSUN';
+      st.style.background = 'rgba(60,140,230,.85)';
+      st.style.visibility = 'visible';
+    } else {
+      st.textContent = 'GİZLİ';
+      st.style.background = '';
+      st.style.visibility = P.stealthy ? 'visible' : 'hidden';
+    }
+    if (P.pos.y > WATER_Y) {
+      this.el.depth.textContent = 'Yükseklik: ' + Math.round(P.pos.y * 2) + ' m';
+    } else {
+      const meters = Math.max(0, Math.round(-P.pos.y * DEPTH_TO_METERS / 10) * 10);
+      this.el.depth.textContent = 'Derinlik: ' + meters.toLocaleString('tr-TR') + ' m';
+    }
 
     // Hedef canı
     this.targetTimer -= dt;

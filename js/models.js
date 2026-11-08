@@ -54,10 +54,13 @@ function buildShark(o) {
   dorsal.position.set(0, 0.95, 0.3);
   g.add(dorsal);
 
+  const fins = [];
   for (const s of [-1, 1]) {
     const p = new THREE.Mesh(finGeo(1.8, 2.0, 0.18), mat(o.top));
     p.rotation.z = -s * (Math.PI / 2 + 0.4);
     p.position.set(s * 0.9, -0.5, 1.0);
+    p.userData.s = s;
+    fins.push(p);
     g.add(p);
   }
 
@@ -107,7 +110,7 @@ function buildShark(o) {
   addTeeth(jaw, 9, 0.15, 0.7, 0.7, 1.0, false);
   g.add(jaw);
 
-  return { group: g, tail, jaw, tailAxis: o.orca ? 'x' : 'y' };
+  return { group: g, tail, jaw, fins, tailAxis: o.orca ? 'x' : 'y' };
 }
 
 // Kendi ışığını saçan malzeme (derin deniz canlıları için)
