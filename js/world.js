@@ -7,20 +7,20 @@ const TRENCH_TOP = -130;     // çukur canlıları bundan yukarı çıkmaz
 const DEPTH_TO_METERS = 26;  // çukurun dibi yaklaşık 11.000 metre olsun
 
 const ISLANDS = [
-  { x: 110, z: -70, r: 60 },
-  { x: -150, z: 110, r: 72 },
-  { x: 70, z: 230, r: 42 },
-  { x: -210, z: -200, r: 52 },
-  { x: 260, z: 120, r: 38 },
-  { x: -600, z: -500, r: 90 },
-  { x: -750, z: 300, r: 70 },
-  { x: -400, z: 700, r: 60 },
-  { x: 300, z: 750, r: 80 },
-  { x: 800, z: 650, r: 55 },
-  { x: -950, z: -50, r: 50 },
-  { x: 100, z: -650, r: 65 },
-  { x: -300, z: -950, r: 55 },
-  { x: 900, z: -500, r: 45 },
+  { x: 110, z: -70, r: 100 },
+  { x: -150, z: 110, r: 120 },
+  { x: 70, z: 230, r: 70 },
+  { x: -210, z: -200, r: 88 },
+  { x: 260, z: 120, r: 65 },
+  { x: -600, z: -500, r: 150 },
+  { x: -750, z: 300, r: 118 },
+  { x: -400, z: 700, r: 100 },
+  { x: 300, z: 750, r: 135 },
+  { x: 800, z: 650, r: 85 },
+  { x: -950, z: -50, r: 85 },
+  { x: 100, z: -650, r: 110 },
+  { x: -300, z: -950, r: 92 },
+  { x: 900, z: -500, r: 76 },
 ];
 
 // Mariana Çukuru: A'dan B'ye uzanan, dik duvarlı, çok derin bir kanyon
@@ -48,7 +48,8 @@ function terrainHeight(x, z) {
     const d = Math.sqrt(dx * dx + dz * dz);
     if (d > isl.r * 2.4) continue;
     const t = d / isl.r;
-    let hi = 10 - t * t * 10;
+    const top = 6 + isl.r * 0.08;  // büyük adalar biraz daha yüksek
+    let hi = top - t * t * top;
     hi += (fbm(x * 0.05, z * 0.05) - 0.5) * 8 * clamp(1 - t, 0, 1);
     h = smax(h, hi, 8);
   }
@@ -234,7 +235,7 @@ const World = {
 
   buildTrees() {
     const spots = [];
-    for (let tries = 0; tries < 12000 && spots.length < 900; tries++) {
+    for (let tries = 0; tries < 30000 && spots.length < 2400; tries++) {
       const isl = pick(ISLANDS);
       const a = rand(0, Math.PI * 2), d = Math.sqrt(Math.random()) * isl.r;
       const x = isl.x + Math.cos(a) * d, z = isl.z + Math.sin(a) * d;
@@ -280,7 +281,7 @@ const World = {
     // Mercanlar (adaların çevresindeki sığ sularda, rengârenk)
     const coralGeo = new THREE.IcosahedronGeometry(1, 0);
     const coralColors = [0xff6f61, 0xffa94d, 0xf06bd0, 0xffe066, 0x8a6bff, 0x4fd1c5];
-    const coralCount = 1800;
+    const coralCount = 3000;
     const corals = new THREE.InstancedMesh(coralGeo, new THREE.MeshLambertMaterial({ flatShading: true }), coralCount);
     const col = new THREE.Color();
     for (let i = 0; i < coralCount; i++) {
@@ -380,7 +381,7 @@ const World = {
   // Kıyıda hayvanların su içebileceği noktalar
   findShoreSpots() {
     ISLANDS.forEach((isl, idx) => {
-      const n = 14;
+      const n = Math.round(isl.r / 5);
       for (let k = 0; k < n; k++) {
         const a = (k / n) * Math.PI * 2 + rand(-0.1, 0.1);
         const dx = Math.cos(a), dz = Math.sin(a);
