@@ -47,6 +47,9 @@ const Sound = (() => {
     lunge() { noise(0.35, 400, 0.4); },
     eat() { tone(300, 0.1, 0.15, 'triangle'); tone(420, 0.12, 0.15, 'triangle', 0.08); },
     levelUp() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.3, 0.18, 'triangle', i * 0.1)); },
+    wood() { noise(0.2, 2500, 0.4, 3); tone(140, 0.12, 0.2, 'square'); },
+    crash() { noise(0.9, 1400, 0.8); noise(0.6, 300, 0.7); tone(70, 0.5, 0.3, 'sawtooth'); },
+    cannon() { noise(0.7, 250, 0.9); tone(55, 0.4, 0.35, 'sine'); },
     alert() { tone(880, 0.12, 0.12, 'square'); tone(660, 0.15, 0.12, 'square', 0.12); },
   };
 })();

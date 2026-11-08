@@ -2,7 +2,7 @@
 const SAVE_KEY = 'megalodon_save_v1';
 
 const Save = {
-  data: { level: 1, xp: 0, kills: 0, eaten: 0, deaths: 0, bestLevel: 1 },
+  data: { level: 1, xp: 0, kills: 0, eaten: 0, deaths: 0, bestLevel: 1, sunk: 0, treasures: 0 },
 
   load() {
     try {
@@ -18,6 +18,6 @@ const Save = {
 
   reset() {
     try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* yoksay */ }
-    this.data = { level: 1, xp: 0, kills: 0, eaten: 0, deaths: 0, bestLevel: 1 };
+    this.data = { level: 1, xp: 0, kills: 0, eaten: 0, deaths: 0, bestLevel: 1, sunk: 0, treasures: 0 };
   },
 };

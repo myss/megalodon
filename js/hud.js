@@ -156,6 +156,11 @@ const Hud = {
         g.fillStyle = '#ffe040';
         g.beginPath(); g.arc(mx(a.pos.x), my(a.pos.z), 3, 0, Math.PI * 2); g.fill();
       }
+      for (const s of Ships.list) {
+        if (s.sinking || s.type.pirate) continue;
+        g.fillStyle = '#ffffff';
+        g.fillRect(mx(s.pos.x) - 2.5, my(s.pos.z) - 2.5, 5, 5);
+      }
       // Çukur görünmüyorsa kenarda yönünü gösteren mor ok
       const tr = trenchDistance(cx, cz);
       if (tr.d > range * 0.9) {
@@ -168,6 +173,16 @@ const Hud = {
         g.beginPath(); g.moveTo(8, 0); g.lineTo(-6, -7); g.lineTo(-6, 7); g.closePath(); g.fill();
         g.restore();
       }
+    }
+    // Korsan gemisi her iki haritada da görünür
+    for (const s of Ships.list) {
+      if (s.sinking || !s.type.pirate) continue;
+      const sz = round ? 9 : 12;
+      g.fillStyle = '#111';
+      g.strokeStyle = '#ff3030';
+      g.lineWidth = 2;
+      g.fillRect(mx(s.pos.x) - sz / 2, my(s.pos.z) - sz / 2, sz, sz);
+      g.strokeRect(mx(s.pos.x) - sz / 2, my(s.pos.z) - sz / 2, sz, sz);
     }
     // Oyuncu oku
     const px = mx(Player.pos.x), py = my(Player.pos.z);

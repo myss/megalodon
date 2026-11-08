@@ -28,9 +28,15 @@ const Game = {
       const d = mouth.distanceTo(a.targetPoint()) - 1;
       if (d < reach && d < bestD) { best = a; bestD = d; }
     }
+    for (const s of Ships.list) {
+      if (s.sinking) continue;
+      const d = s.distanceTo(mouth);
+      if (d < reach && d < bestD) { best = s; bestD = d; }
+    }
     if (best) {
-      // Fark edilmeden yapılan saldırı çok daha güçlü
-      const unaware = best instanceof LandAnimal ? best.state !== 'flee' : !best.angry && best.state !== 'chase';
+      // Fark edilmeden yapılan saldırı çok daha güçlü (gemiler hariç)
+      const unaware = best instanceof Ship ? false
+        : best instanceof LandAnimal ? best.state !== 'flee' : !best.angry && best.state !== 'chase';
       if (unaware) {
         dmg *= 3;
         Hud.msg('SÜRPRİZ SALDIRI!');
@@ -57,7 +63,7 @@ const Game = {
     this.state = 'dead';
     document.getElementById('deathInfo').textContent =
       'Seviyen korunuyor (Seviye ' + Player.level + '). Yendiğin düşman: ' + Save.data.kills +
-      ', avladığın kara hayvanı: ' + Save.data.eaten + '.';
+      ', avladığın kara hayvanı: ' + Save.data.eaten + ', batırdığın gemi: ' + Save.data.sunk + '.';
     document.getElementById('deathScreen').classList.remove('hidden');
     if (document.pointerLockElement) document.exitPointerLock();
   },
@@ -72,12 +78,14 @@ Player.init(scene);
 Fish.init(scene);
 Enemies.init(scene);
 Land.init(scene);
+Ships.init(scene);
 camera.position.copy(Player.pos).add(new THREE.Vector3(0, 4, -15));
 
 function showSaveInfo() {
   const d = Save.data;
   document.getElementById('saveInfo').textContent = d.level > 1 || d.kills > 0
-    ? 'Kayıtlı oyun: Seviye ' + d.level + ' · Yendiğin düşman: ' + d.kills + ' · Avladığın kara hayvanı: ' + d.eaten
+    ? 'Kayıtlı oyun: Seviye ' + d.level + ' · Yendiğin düşman: ' + d.kills + ' · Avladığın kara hayvanı: ' + d.eaten +
+      ' · Batırdığın gemi: ' + d.sunk + ' · Hazine: ' + d.treasures
     : '';
 }
 showSaveInfo();
@@ -159,6 +167,7 @@ function frame(now) {
     Fish.update(dt, t);
     Enemies.update(dt, t);
     Land.update(dt);
+    Ships.update(dt, t);
     Effects.update(dt);
     Player.updateCamera(camera, dt);
     Hud.update(dt, camera);
