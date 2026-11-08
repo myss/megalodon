@@ -409,14 +409,18 @@ const World = {
     // Dalgalar
     const wx = Math.round(camera.position.x / 10) * 10, wz = Math.round(camera.position.z / 10) * 10;
     this.water.position.set(wx, 0, wz);
-    const pos = this.water.geometry.attributes.position;
-    const arr = pos.array, base = this.waterBase;
+    // Yükseklik ve normal aynı dalga formülünden (normal = (-dh/dx, 1, -dh/dz))
+    const pos = this.water.geometry.attributes.position, nor = this.water.geometry.attributes.normal;
+    const arr = pos.array, narr = nor.array, base = this.waterBase;
     for (let i = 0; i < arr.length; i += 3) {
-      const x = base[i] + wx, z = base[i + 2] + wz;
-      arr[i + 1] = Math.sin(x * 0.05 + t * 1.1) * 0.35 + Math.sin(z * 0.07 + t * 1.4) * 0.25;
+      const ax = (base[i] + wx) * 0.05 + t * 1.1, az = (base[i + 2] + wz) * 0.07 + t * 1.4;
+      arr[i + 1] = Math.sin(ax) * 0.35 + Math.sin(az) * 0.25;
+      const nx = -Math.cos(ax) * 0.0175, nz = -Math.cos(az) * 0.0175;
+      const inv = 1 / Math.sqrt(nx * nx + 1 + nz * nz);
+      narr[i] = nx * inv; narr[i + 1] = inv; narr[i + 2] = nz * inv;
     }
     pos.needsUpdate = true;
-    this.water.geometry.computeVertexNormals();
+    nor.needsUpdate = true;
 
     this.updateSeaweed(t);
 
