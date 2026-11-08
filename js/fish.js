@@ -2,13 +2,21 @@
 const FISH_COLORS = [0xffd43b, 0xff922b, 0xc0d6e8, 0x4dabf7, 0xff6b6b, 0x9775fa, 0x69db7c];
 const FISH_PER_SCHOOL = 24;
 
+const DEEP_FISH_COLORS = [0x40e0ff, 0x80ff9f, 0xff60c0];
+
 class School {
-  constructor(scene, geo) {
-    this.mesh = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ color: pick(FISH_COLORS) }), FISH_PER_SCHOOL);
+  // deep: çukurda yaşayan, ışık saçan fener balıkçıkları
+  constructor(scene, geo, deep) {
+    this.deep = deep;
+    const color = deep ? pick(DEEP_FISH_COLORS) : pick(FISH_COLORS);
+    const material = deep
+      ? new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: 1.5 })
+      : new THREE.MeshLambertMaterial({ color });
+    this.mesh = new THREE.InstancedMesh(geo, material, FISH_PER_SCHOOL);
     this.mesh.frustumCulled = false;
     scene.add(this.mesh);
-    this.size = rand(0.8, 1.6);
-    this.center = randomWaterPos(10);
+    this.size = deep ? rand(0.6, 1.0) : rand(0.8, 1.6);
+    this.center = deep ? randomTrenchPos() : randomWaterPos(10);
     this.target = this.center.clone();
     this.vel = new THREE.Vector3(0, 0, 1);
     this.spread = 1;
@@ -24,7 +32,16 @@ class School {
     }
   }
 
+  newTarget() {
+    return this.deep ? randomTrenchPos(this.center, 20, 70) : randomWaterPos(8, this.center, 20, 70);
+  }
+
   update(dt, t) {
+    // Dünya büyük: çok uzakta kalan sürü megalodonun yakınına taşınır
+    if (this.center.distanceTo(Player.pos) > 450 && (!this.deep || Enemies.playerInTrench())) {
+      this.center = this.deep ? randomTrenchPos(Player.pos, 60, 200) : randomWaterPos(10, Player.pos, 150, 350);
+      this.target = this.center.clone();
+    }
     const toPlayer = this.center.distanceTo(Player.pos);
     let speed = 4;
     if (toPlayer < 20 + Player.radius() * 2) {
@@ -35,21 +52,20 @@ class School {
       this.spread = Math.min(2.2, this.spread + dt * 3);
     } else {
       this.spread = Math.max(1, this.spread - dt);
-      if (this.center.distanceTo(this.target) < 4) {
-        this.target = randomWaterPos(8, this.center, 20, 70);
-      }
+      if (this.center.distanceTo(this.target) < 4) this.target = this.newTarget();
     }
     const dir = this.target.clone().sub(this.center);
     if (dir.lengthSq() > 0.01) dir.normalize();
     this.vel.lerp(dir.multiplyScalar(speed), 1 - Math.exp(-dt * 2));
     this.center.addScaledVector(this.vel, dt);
     const ground = terrainHeight(this.center.x, this.center.z);
-    if (ground > -5) {
-      // Sığlığa girme
+    if (ground > (this.deep ? TRENCH_TOP - 20 : -5)) {
+      // Sığlığa (ya da çukurun dışına) girme
       this.center.addScaledVector(this.vel, -dt);
-      this.target = randomWaterPos(8, this.center, 20, 70);
+      this.target = this.newTarget();
     }
-    this.center.y = clamp(this.center.y, ground + 3, WATER_Y - 1.5);
+    if (this.deep) this.center.y = clamp(this.center.y, ground + 3, TRENCH_TOP - 5);
+    else this.center.y = clamp(this.center.y, Math.max(ground + 3, SEA_MIN_Y), WATER_Y - 1.5);
 
     const yaw = Math.atan2(this.vel.x, this.vel.z);
     const pitch = Math.atan2(this.vel.y, Math.hypot(this.vel.x, this.vel.z));
@@ -80,7 +96,8 @@ const Fish = {
 
   init(scene) {
     const geo = smallFishGeometry();
-    for (let i = 0; i < 16; i++) this.schools.push(new School(scene, geo));
+    for (let i = 0; i < 22; i++) this.schools.push(new School(scene, geo, false));
+    for (let i = 0; i < 8; i++) this.schools.push(new School(scene, geo, true));
   },
 
   update(dt, t) {

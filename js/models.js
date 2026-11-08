@@ -110,19 +110,28 @@ function buildShark(o) {
   return { group: g, tail, jaw, tailAxis: o.orca ? 'x' : 'y' };
 }
 
-function buildSquid() {
+// Kendi ışığını saçan malzeme (derin deniz canlıları için)
+function glowMat(color, intensity) {
+  const key = 'glow' + color + '_' + (intensity || 1);
+  if (!_matCache[key]) _matCache[key] = new THREE.MeshLambertMaterial({ color, emissive: color, emissiveIntensity: intensity || 1 });
+  return _matCache[key];
+}
+
+function buildSquid(o) {
+  o = Object.assign({ color: 0xc0504a, head: 0xb04844, arm: 0xd06058, eye: 0xfff2a0, glowEyes: false }, o);
   const g = new THREE.Group();
-  const color = 0xc0504a;
+  const color = o.color;
   const mantleGeo = new THREE.ConeGeometry(1.4, 5.5, 12);
   mantleGeo.rotateX(-Math.PI / 2);
   const mantle = new THREE.Mesh(mantleGeo, mat(color));
   mantle.position.z = 0;
   g.add(mantle);
-  const head = ellipsoid(1.2, 1.1, 1.3, 0xb04844);
+  const head = ellipsoid(1.2, 1.1, 1.3, o.head);
   head.position.z = 3.0;
   g.add(head);
   for (const s of [-1, 1]) {
-    const eye = ellipsoid(0.4, 0.4, 0.4, 0xfff2a0, 10);
+    const eye = ellipsoid(0.4, 0.4, 0.4, o.eye, 10);
+    if (o.glowEyes) eye.material = glowMat(o.eye, 1.2);
     eye.position.set(s * 1.0, 0.3, 3.1);
     const pupil = ellipsoid(0.2, 0.22, 0.2, 0x111111, 8);
     pupil.position.set(s * 1.3, 0.3, 3.15);
@@ -139,7 +148,7 @@ function buildSquid() {
     const a = (i / 8) * Math.PI * 2;
     const t = new THREE.Group();
     t.position.set(Math.cos(a) * 0.7, Math.sin(a) * 0.7, 3.8);
-    const m = new THREE.Mesh(tGeo, mat(0xd06058));
+    const m = new THREE.Mesh(tGeo, mat(o.arm));
     t.add(m);
     t.userData.a = a;
     tentacles.push(t);
@@ -342,11 +351,11 @@ function buildOctopus() {
 }
 
 // Yarı saydam, parlayan denizanası
-function buildJelly() {
+function buildJelly(deep) {
   const g = new THREE.Group();
-  const color = pick([0xff7ad9, 0x9d7aff, 0x7ad9ff]);
+  const color = deep ? pick([0xff3050, 0x30a0ff, 0x60ffb0]) : pick([0xff7ad9, 0x9d7aff, 0x7ad9ff]);
   const domeMat = new THREE.MeshLambertMaterial({
-    color, emissive: color, emissiveIntensity: 0.45, transparent: true, opacity: 0.6, side: THREE.DoubleSide,
+    color, emissive: color, emissiveIntensity: deep ? 1.4 : 0.45, transparent: true, opacity: 0.6, side: THREE.DoubleSide,
   });
   const dome = new THREE.Mesh(new THREE.SphereGeometry(1.4, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), domeMat);
   g.add(dome);
@@ -363,6 +372,161 @@ function buildJelly() {
     g.add(t);
   }
   return { group: g, dome, jellyTentacles: tentacles };
+}
+
+// ---- Mariana Çukuru canlıları ----
+
+// Fener balığı: kocaman ağız, başının üstünde parlayan yem
+function buildAnglerfish() {
+  const g = new THREE.Group();
+  const skin = 0x2b2a33;
+  g.add(ellipsoid(1.5, 1.4, 1.7, skin));
+  const jaw = new THREE.Group();
+  jaw.position.set(0, -0.5, 0.6);
+  const jm = ellipsoid(1.3, 0.5, 1.2, 0x3a3842, 12);
+  jm.position.z = 0.7;
+  jaw.add(jm);
+  const fangGeo = new THREE.ConeGeometry(0.08, 0.7, 4);
+  for (let i = 0; i < 9; i++) {
+    const a = -1.1 + (2.2 * i) / 8;
+    const t = new THREE.Mesh(fangGeo, mat(0xf4f0e0));
+    t.position.set(Math.sin(a) * 1.1, 0.45, 0.8 + Math.cos(a) * 1.0);
+    jaw.add(t);
+    const u = new THREE.Mesh(fangGeo, mat(0xf4f0e0));
+    u.position.set(Math.sin(a) * 1.15, -0.3, 0.9 + Math.cos(a) * 1.05);
+    u.rotation.x = Math.PI;
+    g.add(u);
+  }
+  g.add(jaw);
+  for (const s of [-1, 1]) {
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), glowMat(0xc8ffd0, 0.6));
+    e.position.set(s * 0.75, 0.75, 1.2);
+    g.add(e);
+    const f = new THREE.Mesh(finGeo(0.8, 0.9, 0.08), mat(skin));
+    f.rotation.z = -s * (Math.PI / 2 + 0.3);
+    f.position.set(s * 1.3, -0.2, -0.3);
+    g.add(f);
+  }
+  // Yem: kıvrık sap + parlayan top
+  const lure = new THREE.Group();
+  lure.position.set(0, 1.3, 0.6);
+  const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 2.2, 5), mat(skin));
+  stalk.position.set(0, 0.9, 0.5);
+  stalk.rotation.x = 0.6;
+  lure.add(stalk);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), glowMat(0x9fffe0, 2.5));
+  bulb.position.set(0, 1.8, 1.25);
+  lure.add(bulb);
+  g.add(lure);
+  const tail = new THREE.Group();
+  tail.position.z = -1.6;
+  const tf = new THREE.Mesh(finGeo(1.0, 1.3, 0.1), mat(skin));
+  tf.position.z = -0.4;
+  const tf2 = tf.clone();
+  tf2.rotation.z = Math.PI;
+  tail.add(tf, tf2);
+  g.add(tail);
+  return { group: g, tail, jaw, lure, tailAxis: 'y' };
+}
+
+// Engerek balığı: ince uzun gövde, dışarı taşan dişler, karnında ışık noktaları
+function buildViperfish() {
+  const fish = buildBigFish({ top: 0x1d2a3a, belly: 0x2c3e55, w: 0.4, h: 0.6, l: 2.4, jaw: true });
+  const g = fish.group;
+  const fangGeo = new THREE.ConeGeometry(0.06, 0.9, 4);
+  for (const s of [-1, 1]) {
+    const f = new THREE.Mesh(fangGeo, mat(0xf0f0ff));
+    f.position.set(s * 0.18, 0.1, 2.3);
+    f.rotation.x = -0.4;
+    g.add(f);
+    const f2 = new THREE.Mesh(fangGeo, mat(0xf0f0ff));
+    f2.position.set(s * 0.15, -0.5, 2.2);
+    f2.rotation.x = Math.PI + 0.4;
+    g.add(f2);
+  }
+  const dotGeo = new THREE.SphereGeometry(0.07, 5, 4);
+  for (let i = 0; i < 10; i++) {
+    for (const s of [-1, 1]) {
+      const d = new THREE.Mesh(dotGeo, glowMat(0x5fd0ff, 2));
+      d.position.set(s * 0.25, -0.45, 1.8 - i * 0.38);
+      g.add(d);
+    }
+  }
+  return fish;
+}
+
+// Goblin köpekbalığı: pembe, uzun yassı burun, fırlayan çene
+function buildGoblinShark() {
+  const shark = buildShark({ top: 0xd9a0a6, belly: 0xf0cccc, dorsalH: 1.4 });
+  const snout = ellipsoid(0.45, 0.22, 2.0, 0xe2b0b5, 12);
+  snout.position.set(0, 0.45, 4.6);
+  shark.group.add(snout);
+  shark.jaw.position.z += 0.6;
+  return shark;
+}
+
+// Dev izopod: zırhlı, bölümlü deniz böceği
+function buildIsopod() {
+  const g = new THREE.Group();
+  const shell = 0xb8b0c8;
+  for (let i = 0; i < 7; i++) {
+    const seg = ellipsoid(1.3 - Math.abs(i - 3) * 0.12, 0.55, 0.45, i % 2 ? shell : 0xa8a0b8, 12);
+    seg.position.set(0, 0.6, 1.8 - i * 0.6);
+    g.add(seg);
+  }
+  const head = ellipsoid(0.8, 0.45, 0.5, 0x9890a8, 10);
+  head.position.set(0, 0.5, 2.4);
+  g.add(head);
+  for (const s of [-1, 1]) {
+    const eye = ellipsoid(0.2, 0.15, 0.2, 0x222222, 8);
+    eye.position.set(s * 0.55, 0.65, 2.55);
+    g.add(eye);
+    const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 2.2, 4), mat(0xa8a0b8));
+    ant.position.set(s * 0.6, 0.5, 3.4);
+    ant.rotation.set(Math.PI / 2 - 0.2, 0, -s * 0.5);
+    g.add(ant);
+  }
+  const legs = [];
+  const legGeo = new THREE.CylinderGeometry(0.05, 0.07, 0.9, 4);
+  legGeo.translate(0, -0.45, 0);
+  for (let i = 0; i < 7; i++) {
+    for (const s of [-1, 1]) {
+      const l = new THREE.Mesh(legGeo, mat(0x9890a8));
+      l.position.set(s * 0.9, 0.4, 1.8 - i * 0.6);
+      l.rotation.z = s * 0.6;
+      l.userData.i = i;
+      legs.push(l);
+      g.add(l);
+    }
+  }
+  return { group: g, legs };
+}
+
+// Dumbo ahtapotu: kulak gibi yüzgeçlerini çırparak yüzer
+function buildDumbo() {
+  const g = new THREE.Group();
+  const pink = 0xffb0a0;
+  const body = ellipsoid(1.1, 1.3, 1.1, pink);
+  body.position.y = 0.6;
+  g.add(body);
+  const ears = [];
+  for (const s of [-1, 1]) {
+    const ear = new THREE.Group();
+    ear.position.set(s * 0.9, 1.3, 0);
+    const em = ellipsoid(0.7, 0.12, 0.5, 0xff9a8a, 10);
+    em.position.x = s * 0.6;
+    ear.add(em);
+    ear.userData.s = s;
+    ears.push(ear);
+    g.add(ear);
+    const eye = ellipsoid(0.18, 0.2, 0.15, 0x222222, 8);
+    eye.position.set(s * 0.45, 0.8, 0.95);
+    g.add(eye);
+  }
+  const skirt = new THREE.Mesh(new THREE.ConeGeometry(1.5, 1.2, 10, 1, true), new THREE.MeshLambertMaterial({ color: 0xff9a8a, side: THREE.DoubleSide }));
+  skirt.position.y = -0.4;
+  g.add(skirt);
+  return { group: g, ears, skirt };
 }
 
 // Balık sürüsü için tek parça küçük balık geometrisi

@@ -18,6 +18,8 @@
   #hpBar > div { background: #e54545; }
   #foodBar > div { background: #f0a030; }
   #stamBar > div { background: #f5e050; }
+  #depth { margin-top: 6px; font-size: 13px; font-weight: 600; }
+  #bigmap { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, 90vw, 80vh); height: min(560px, 90vw, 80vh); border-radius: 14px; border: 3px solid rgba(255,255,255,.6); background: rgba(0,30,55,.85); }
   #stealth { margin-top: 6px; font-size: 13px; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-block; background: rgba(40,160,90,.75); visibility: hidden; }
 
   #minimap { position: absolute; top: 14px; right: 14px; width: 190px; height: 190px; border-radius: 50%; border: 3px solid rgba(255,255,255,.5); background: rgba(0,40,70,.6); }
@@ -58,14 +60,16 @@
     <div class="bar" id="hpBar"><div></div><span>Can</span></div>
     <div class="bar" id="foodBar"><div></div><span>Açlık</span></div>
     <div class="bar" id="stamBar"><div></div><span>Enerji</span></div>
+    <div id="depth">Derinlik: 0 m</div>
     <div id="stealth">GİZLİ</div>
   </div>
   <canvas id="minimap" width="190" height="190"></canvas>
+  <canvas id="bigmap" width="560" height="560" class="hidden"></canvas>
   <div id="target"><div id="targetName"></div><div class="bar" id="targetBar"><div></div></div></div>
   <div id="crosshair"></div>
   <div id="messages"></div>
   <div id="floats"></div>
-  <div id="hint">Fare: yön · W: yüz · Shift: hızlı · C: gizli yüz · Boşluk: atıl · Sol tık: ısır · Esc: duraklat</div>
+  <div id="hint">Fare: yön · W: yüz · Shift: hızlı · C: gizli yüz · Boşluk: atıl · Sol tık: ısır · M: harita · Esc: duraklat</div>
 </div>
 
 <div id="startScreen" class="overlay">
@@ -81,8 +85,10 @@
     <b>C</b><span>Gizli yüz (hayvanlar fark etmez)</span>
     <b>Boşluk</b><span>Atıl! (yüzeyden sudan fırlarsın)</span>
     <b>Sol tık</b><span>Isır</span>
+    <b>M</b><span>Büyük harita</span>
     <b>Esc</b><span>Duraklat</span>
   </div>
+  <p>Haritadaki mor bölge <b>Mariana Çukuru</b>. Çok derine dal; orada karanlıkta parlayan tuhaf canlılar yaşıyor!</p>
   <p id="saveInfo"></p>
   <button id="playBtn">OYNA</button>
   <button id="resetBtn" class="small">Kaydı sil</button>

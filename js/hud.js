@@ -19,8 +19,15 @@ const Hud = {
       target: $('target'),
       targetName: $('targetName'),
       targetBar: $('targetBar').firstElementChild,
+      depth: $('depth'),
       map: $('minimap').getContext('2d'),
+      bigmapCanvas: $('bigmap'),
+      bigmap: $('bigmap').getContext('2d'),
     };
+  },
+
+  toggleBigMap() {
+    this.el.bigmapCanvas.classList.toggle('hidden');
   },
 
   msg(text, big) {
@@ -57,6 +64,8 @@ const Hud = {
     this.el.food.style.width = P.hunger + '%';
     this.el.stam.style.width = P.stamina + '%';
     this.el.stealth.style.visibility = P.stealthy ? 'visible' : 'hidden';
+    const meters = Math.max(0, Math.round(-P.pos.y * DEPTH_TO_METERS / 10) * 10);
+    this.el.depth.textContent = 'Derinlik: ' + meters.toLocaleString('tr-TR') + ' m';
 
     // Hedef canı
     this.targetTimer -= dt;
@@ -84,40 +93,74 @@ const Hud = {
       f.el.style.opacity = Math.min(1, f.life * 2);
     }
 
-    this.drawMap();
+    // Küçük harita: megalodonun çevresi. Büyük harita: bütün dünya.
+    this.drawMap(this.el.map, 190, Player.pos.x, Player.pos.z, 300, true);
+    if (!this.el.bigmapCanvas.classList.contains('hidden')) {
+      this.drawMap(this.el.bigmap, 560, 0, 0, WORLD_HALF, false);
+    }
   },
 
-  drawMap() {
-    const g = this.el.map;
-    const S = 190, C = S / 2, k = (C - 6) / WORLD_HALF;
+  drawMap(g, S, cx, cz, range, round) {
+    const C = S / 2, k = (C - 6) / range;
     // Haritada ileri (+Z) yukarı, sağ taraf -X
-    const mx = (x) => C - x * k, my = (z) => C - z * k;
+    const mx = (x) => C - (x - cx) * k, my = (z) => C - (z - cz) * k;
     g.clearRect(0, 0, S, S);
     g.save();
-    g.beginPath(); g.arc(C, C, C - 2, 0, Math.PI * 2); g.clip();
+    g.beginPath();
+    if (round) g.arc(C, C, C - 2, 0, Math.PI * 2);
+    else g.rect(0, 0, S, S);
+    g.clip();
     g.fillStyle = 'rgba(20,90,140,.55)';
     g.fillRect(0, 0, S, S);
+
+    // Mariana Çukuru
+    g.strokeStyle = 'rgba(70,10,110,.85)';
+    g.lineCap = 'round';
+    g.lineWidth = TRENCH.width * 1.1 * k;
+    g.beginPath(); g.moveTo(mx(TRENCH.ax), my(TRENCH.az)); g.lineTo(mx(TRENCH.bx), my(TRENCH.bz)); g.stroke();
+    if (!round) {
+      g.fillStyle = '#e0b0ff';
+      g.font = 'bold 15px Segoe UI, Arial';
+      g.textAlign = 'left';
+      g.fillText('MARİANA ÇUKURU', mx((TRENCH.ax + TRENCH.bx) / 2) + TRENCH.width * k, my((TRENCH.az + TRENCH.bz) / 2));
+    }
+
     for (const isl of ISLANDS) {
       g.fillStyle = '#e8d49a';
       g.beginPath(); g.arc(mx(isl.x), my(isl.z), isl.r * k, 0, Math.PI * 2); g.fill();
       g.fillStyle = '#4f9a3a';
       g.beginPath(); g.arc(mx(isl.x), my(isl.z), isl.r * k * 0.75, 0, Math.PI * 2); g.fill();
     }
-    for (const e of Enemies.list) {
-      if (e.pos.distanceTo(Player.pos) > 150) continue;
-      g.fillStyle = e.type.passive ? '#9fe0ff' : e.type.boss ? '#ff00ff' : e.type.neutral ? '#ffaa40' : e.type.drifter ? '#e08cff' : '#ff4040';
-      g.beginPath(); g.arc(mx(e.pos.x), my(e.pos.z), e.type.boss ? 4.5 : 3, 0, Math.PI * 2); g.fill();
-    }
-    const blink = Math.floor(performance.now() / 400) % 2 === 0;
-    for (const a of Land.list) {
-      if (a.state === 'drink' && !blink) continue;
-      g.fillStyle = '#ffe040';
-      g.beginPath(); g.arc(mx(a.pos.x), my(a.pos.z), 3, 0, Math.PI * 2); g.fill();
+    if (round) {
+      for (const e of Enemies.list) {
+        if (e.pos.distanceTo(Player.pos) > 150) continue;
+        g.fillStyle = e.type.passive ? '#9fe0ff' : e.type.boss ? '#ff00ff' : e.type.neutral ? '#ffaa40' : e.type.drifter ? '#e08cff' : '#ff4040';
+        g.beginPath(); g.arc(mx(e.pos.x), my(e.pos.z), e.type.boss ? 4.5 : 3, 0, Math.PI * 2); g.fill();
+      }
+      const blink = Math.floor(performance.now() / 400) % 2 === 0;
+      for (const a of Land.list) {
+        if (a.state === 'drink' && !blink) continue;
+        g.fillStyle = '#ffe040';
+        g.beginPath(); g.arc(mx(a.pos.x), my(a.pos.z), 3, 0, Math.PI * 2); g.fill();
+      }
+      // Çukur görünmüyorsa kenarda yönünü gösteren mor ok
+      const tr = trenchDistance(cx, cz);
+      if (tr.d > range * 0.9) {
+        const tx = lerp(TRENCH.ax, TRENCH.bx, tr.u), tz = lerp(TRENCH.az, TRENCH.bz, tr.u);
+        const ang = Math.atan2(my(tz) - C, mx(tx) - C);
+        g.save();
+        g.translate(C + Math.cos(ang) * (C - 12), C + Math.sin(ang) * (C - 12));
+        g.rotate(ang);
+        g.fillStyle = '#c070ff';
+        g.beginPath(); g.moveTo(8, 0); g.lineTo(-6, -7); g.lineTo(-6, 7); g.closePath(); g.fill();
+        g.restore();
+      }
     }
     // Oyuncu oku
     const px = mx(Player.pos.x), py = my(Player.pos.z);
     g.translate(px, py);
     g.rotate(Math.atan2(-Math.cos(Player.yaw), -Math.sin(Player.yaw)));
+    if (!round) g.scale(1.6, 1.6);
     g.fillStyle = '#fff';
     g.beginPath(); g.moveTo(7, 0); g.lineTo(-5, -5); g.lineTo(-2, 0); g.lineTo(-5, 5); g.closePath(); g.fill();
     g.restore();

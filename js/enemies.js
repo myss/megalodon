@@ -1,8 +1,9 @@
 // Deniz düşmanları ve barışçıl deniz canlıları.
 // Hepsi megalodondan küçüktür. Bayraklar:
 //   passive: hiç saldırmaz, kaçar · neutral: sadece ısırılınca saldırır
-//   drifter: yavaş süzülür, değince sokar · bottom: deniz tabanında gezer · deep: derin suda doğar
-//   boss: aynı anda en fazla bir tane
+//   drifter: yavaş süzülür, değince sokar · bottom: deniz tabanında gezer · upright: hep dik durur
+//   nearBottom: tabana yakın doğar · boss: aynı anda en fazla bir tane
+//   trench: sadece Mariana Çukuru'nun derinliklerinde yaşar
 const ENEMY_TYPES = {
   beyaz: {
     name: 'Büyük Beyaz Köpekbalığı', hp: 70, dmg: 8, speed: 13, aggro: 40, size: 0.65, radius: 2.4,
@@ -21,7 +22,7 @@ const ENEMY_TYPES = {
   },
   kalamar: {
     name: 'Dev Kalamar', hp: 130, dmg: 11, speed: 9, aggro: 35, size: 1.0, radius: 3,
-    xp: 70, food: 40, minLevel: 1, weight: 3, deep: true,
+    xp: 70, food: 40, minLevel: 1, weight: 3, nearBottom: true,
     build: buildSquid,
   },
   ahtapot: {
@@ -48,6 +49,48 @@ const ENEMY_TYPES = {
     name: 'Mozasor', hp: 450, dmg: 24, speed: 15, aggro: 60, size: 0.75, radius: 3.5,
     xp: 300, food: 100, minLevel: 5, weight: 1, boss: true,
     build: buildMosasaurus,
+  },
+
+  // ---- Mariana Çukuru ----
+  fener: {
+    name: 'Fener Balığı', hp: 70, dmg: 12, speed: 9, aggro: 40, size: 1.4, radius: 2.4,
+    xp: 80, food: 30, minLevel: 1, weight: 3, trench: true,
+    build: buildAnglerfish,
+  },
+  engerek: {
+    name: 'Engerek Balığı', hp: 40, dmg: 9, speed: 16, aggro: 45, size: 1.3, radius: 1.8,
+    xp: 60, food: 20, minLevel: 1, weight: 3, trench: true,
+    build: buildViperfish,
+  },
+  goblin: {
+    name: 'Goblin Köpekbalığı', hp: 140, dmg: 14, speed: 14, aggro: 50, size: 0.75, radius: 2.8,
+    xp: 120, food: 45, minLevel: 1, weight: 2, trench: true,
+    build: buildGoblinShark,
+  },
+  vampir: {
+    name: 'Vampir Kalamar', hp: 60, dmg: 8, speed: 11, aggro: 35, size: 0.6, radius: 2,
+    xp: 70, food: 25, minLevel: 1, weight: 2, trench: true,
+    build: () => buildSquid({ color: 0x5a0f1f, head: 0x4a0c1a, arm: 0x6a1525, eye: 0x60c0ff, glowEyes: true }),
+  },
+  parlayanDenizanasi: {
+    name: 'Parlayan Denizanası', hp: 15, dmg: 8, speed: 1.5, aggro: 0, size: 1.5, radius: 2.2,
+    xp: 20, food: 3, minLevel: 1, weight: 3, trench: true, drifter: true,
+    build: () => buildJelly(true),
+  },
+  izopod: {
+    name: 'Dev İzopod', hp: 50, dmg: 0, speed: 4, aggro: 0, size: 1.3, radius: 2,
+    xp: 40, food: 35, minLevel: 1, weight: 2, trench: true, passive: true, bottom: true,
+    build: buildIsopod,
+  },
+  dumbo: {
+    name: 'Dumbo Ahtapotu', hp: 25, dmg: 0, speed: 5, aggro: 0, size: 1.2, radius: 1.8,
+    xp: 35, food: 20, minLevel: 1, weight: 2, trench: true, passive: true, upright: true,
+    build: buildDumbo,
+  },
+  kraken: {
+    name: 'KRAKEN', hp: 1000, dmg: 28, speed: 12, aggro: 70, size: 1.45, radius: 6,
+    xp: 800, food: 100, minLevel: 4, weight: 1, trench: true, boss: true,
+    build: () => buildSquid({ color: 0x3e1636, head: 0x34102c, arm: 0x55204a, eye: 0xffd040, glowEyes: true }),
   },
   kaplumbaga: {
     name: 'Deniz Kaplumbağası', hp: 30, dmg: 0, speed: 6, aggro: 0, size: 1.0, radius: 2,
@@ -79,12 +122,16 @@ class Enemy {
     this.hp = this.maxHp;
     this.radius = this.type.radius;
     this.state = 'wander';
-    this.wanderTarget = randomWaterPos(8, this.pos, 20, 60);
+    this.wanderTarget = this.newWanderTarget();
     this.angry = false;
     this.attackCd = 0;
     this.attackAnim = 0;
     this.phase = rand(0, 6.28);
     this.dead = false;
+  }
+
+  newWanderTarget() {
+    return this.type.trench ? randomTrenchPos(this.pos, 20, 80) : randomWaterPos(8, this.pos, 20, 60);
   }
 
   update(dt, t) {
@@ -114,7 +161,7 @@ class Enemy {
       dir = toP.clone().negate().setY(rand(-0.1, 0.1)).normalize();
       speed = T.speed * 1.1;
     } else {
-      if (this.pos.distanceTo(this.wanderTarget) < 5) this.wanderTarget = randomWaterPos(8, this.pos, 20, 60);
+      if (this.pos.distanceTo(this.wanderTarget) < 5) this.wanderTarget = this.newWanderTarget();
       dir = this.wanderTarget.clone().sub(this.pos).normalize();
       speed = T.drifter ? T.speed : T.speed * 0.4;
     }
@@ -128,17 +175,20 @@ class Enemy {
 
     const next = this.pos.clone().addScaledVector(this.fwd, speed * dt);
     const ground = terrainHeight(next.x, next.z);
-    if (ground < -4) {
+    // Sığlığa (çukur canlıları için çukurun dışına) çıkamaz, başka yöne döner
+    if (ground < (T.trench ? TRENCH_TOP - 20 : -4)) {
       this.pos.copy(next);
     } else {
-      // Sığlık: kıyıya çıkamaz, başka yöne dön
-      this.wanderTarget = randomWaterPos(8, this.pos, 20, 60);
+      this.wanderTarget = this.newWanderTarget();
       this.yaw += dt * 2;
     }
     const g2 = terrainHeight(this.pos.x, this.pos.z);
-    this.pos.y = clamp(this.pos.y, g2 + 1.5 * this.type.size + 1, WATER_Y - 1.2);
+    let lo = g2 + 1.5 * T.size + 1, hi = WATER_Y - 1.2;
+    if (T.trench) hi = TRENCH_TOP;
+    else lo = Math.max(lo, SEA_MIN_Y);
+    this.pos.y = clamp(this.pos.y, lo, hi);
     if (T.bottom && this.state !== 'chase') this.pos.y = lerp(this.pos.y, g2 + 1.2, 1 - Math.exp(-dt * 2));
-    if (Math.hypot(this.pos.x, this.pos.z) > WORLD_LIMIT) this.wanderTarget = randomWaterPos(8);
+    if (Math.hypot(this.pos.x, this.pos.z) > WORLD_LIMIT) this.wanderTarget = this.newWanderTarget();
 
     // Megalodonun içine girme
     const minD = this.radius + Player.radius();
@@ -160,7 +210,7 @@ class Enemy {
   updateModel(dt, t, speed) {
     const m = this.model;
     m.group.position.copy(this.pos);
-    const flat = this.type.drifter || this.type.bottom;
+    const flat = this.type.drifter || this.type.bottom || this.type.upright;
     m.group.rotation.set(flat ? 0 : -this.pitch, this.yaw, 0);
     this.phase += dt * (2 + speed * 0.4);
     if (m.tail) m.tail.rotation[m.tailAxis] = Math.sin(this.phase) * 0.35;
@@ -186,6 +236,12 @@ class Enemy {
         const reach = this.attackAnim > 0 ? -0.6 : 0;
         arm.rotation.x = 0.35 + Math.sin(this.phase * 0.5 + i * 0.8) * 0.25 + (i < 2 || i > 6 ? reach : 0);
       });
+    }
+    if (m.lure) m.lure.rotation.x = Math.sin(this.phase * 0.4) * 0.15;
+    if (m.legs) m.legs.forEach((l) => { l.rotation.x = Math.sin(this.phase * 2 + l.userData.i) * 0.4; });
+    if (m.ears) {
+      m.ears.forEach((e) => { e.rotation.z = e.userData.s * Math.sin(this.phase * 0.8) * 0.6; });
+      m.skirt.scale.y = 1 + Math.sin(this.phase * 0.8) * 0.15;
     }
     if (m.dome) {
       // Denizanası atım atım süzülür
@@ -237,22 +293,35 @@ const Enemies = {
 
   wanted() { return Math.min(14 + Player.level, 24); },
 
+  // Megalodon çukurun derinliklerindeyse çukur canlıları doğar
+  playerInTrench() {
+    return inTrench(Player.pos.x, Player.pos.z) && Player.pos.y < TRENCH_TOP + 40;
+  },
+
   spawn(initial) {
     const lvl = Player.level;
+    const trench = this.playerInTrench();
     const pool = Object.keys(ENEMY_TYPES).filter((k) => {
       const t = ENEMY_TYPES[k];
+      if (!!t.trench !== trench) return false;
       if (t.minLevel > lvl) return false;
-      if (t.boss && this.list.some((e) => e.type.boss)) return false;
+      if (t.boss && this.list.some((e) => e.key === k)) return false;
       return true;
     });
     let total = pool.reduce((s, k) => s + ENEMY_TYPES[k].weight, 0);
     let r = Math.random() * total, key = pool[0];
     for (const k of pool) { r -= ENEMY_TYPES[k].weight; if (r <= 0) { key = k; break; } }
     const T = ENEMY_TYPES[key];
-    const pos = randomWaterPos(T.deep ? 22 : 10, Player.pos, initial ? 50 : 90, initial ? 250 : 200);
-    if (T.deep || T.bottom) pos.y = terrainHeight(pos.x, pos.z) + (T.deep ? 5 : 1.5);
+    let pos;
+    if (trench) {
+      pos = randomTrenchPos(Player.pos, initial ? 40 : 70, initial ? 160 : 180);
+      if (T.bottom) pos.y = terrainHeight(pos.x, pos.z) + 1.5;
+    } else {
+      pos = randomWaterPos(T.nearBottom ? 22 : 10, Player.pos, initial ? 50 : 90, initial ? 250 : 200);
+      if (T.nearBottom || T.bottom) pos.y = Math.max(terrainHeight(pos.x, pos.z) + (T.nearBottom ? 5 : 1.5), SEA_MIN_Y);
+    }
     const e = new Enemy(this.scene, key, pos);
-    if (e.type.boss) Hud.msg('Dikkat! Bir MOZASOR yakınlarda!');
+    if (e.type.boss) Hud.big('Dikkat! ' + e.name + ' yakınlarda!');
     this.list.push(e);
   },
 
@@ -264,9 +333,12 @@ const Enemies = {
     }
     this.list = this.list.filter((e) => !e.dead);
     this.spawnTimer -= dt;
-    if (this.list.length < this.wanted() && this.spawnTimer <= 0) {
+    const trench = this.playerInTrench();
+    const here = this.list.filter((e) => !!e.type.trench === trench).length;
+    if (here < this.wanted() && this.spawnTimer <= 0) {
       this.spawn(false);
-      this.spawnTimer = 3;
+      // Çukura ilk girişte canlılar hızlıca belirsin
+      this.spawnTimer = here < this.wanted() / 2 ? 0.5 : 3;
     }
   },
 };

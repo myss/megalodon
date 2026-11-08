@@ -9,6 +9,7 @@ const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerH
 
 const Game = {
   state: 'menu',
+  inTrench: false,
   time: 0,
   saveTimer: 0,
 
@@ -120,6 +121,7 @@ document.addEventListener('pointerlockchange', () => {
 window.addEventListener('keydown', (e) => {
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   if (!Input.keys[e.code]) Input.pressed[e.code] = true;
+  if (e.code === 'KeyM' && !Input.keys[e.code] && Game.state === 'playing') Hud.toggleBigMap();
   Input.keys[e.code] = true;
 });
 window.addEventListener('keyup', (e) => { Input.keys[e.code] = false; });
@@ -160,6 +162,12 @@ function frame(now) {
     Effects.update(dt);
     Player.updateCamera(camera, dt);
     Hud.update(dt, camera);
+    const inTrenchNow = Enemies.playerInTrench();
+    if (inTrenchNow && !Game.inTrench) {
+      Hud.big('MARİANA ÇUKURU');
+      Hud.msg('Karanlıkta tuhaf canlılar yaşıyor...');
+    }
+    Game.inTrench = inTrenchNow;
     Game.saveTimer -= dt;
     if (Game.saveTimer <= 0) { Save.write(); Game.saveTimer = 10; }
   } else if (Game.state === 'menu') {
@@ -169,7 +177,7 @@ function frame(now) {
     camera.lookAt(Player.pos);
     Player.updateModel(dt, 4, 0);
   }
-  World.update(now / 1000, camera);
+  World.update(now / 1000, camera, Game.state === 'playing' ? dt : 0);
   Input.endFrame();
   renderer.render(scene, camera);
 }
