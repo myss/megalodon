@@ -118,6 +118,7 @@ const Game = {
 // Kurulum
 Save.load();
 Hud.init();
+Voice.init();
 World.init(scene);
 Effects.init(scene);
 Player.init(scene);
@@ -177,6 +178,7 @@ window.addEventListener('keydown', (e) => {
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   if (!Input.keys[e.code]) Input.pressed[e.code] = true;
   if (e.code === 'KeyM' && !Input.keys[e.code] && Game.state === 'playing') Hud.toggleBigMap();
+  if (e.code === 'KeyV' && !Input.keys[e.code] && Game.state === 'playing') Voice.toggle();
   const formIndex = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'].indexOf(e.code);
   if (formIndex >= 0 && Game.state === 'playing') Player.transform(FORM_ORDER[formIndex]);
   Input.keys[e.code] = true;
