@@ -16,11 +16,11 @@ const ISLANDS = [
   { x: -750, z: 300, r: 70 },
   { x: -400, z: 700, r: 60 },
   { x: 300, z: 750, r: 80 },
-  { x: 950, z: 800, r: 55 },
+  { x: 800, z: 650, r: 55 },
   { x: -950, z: -50, r: 50 },
   { x: 100, z: -650, r: 65 },
   { x: -300, z: -950, r: 55 },
-  { x: 1000, z: -550, r: 45 },
+  { x: 900, z: -500, r: 45 },
 ];
 
 // Mariana Çukuru: A'dan B'ye uzanan, dik duvarlı, çok derin bir kanyon
@@ -62,13 +62,16 @@ function terrainHeight(x, z) {
   return h;
 }
 
-// Arazinin eğimi: aşağı doğru yön (karaya vuran megalodonu suya kaydırmak için)
-function terrainDownhill(x, z, out) {
-  const e = 1;
-  const gx = terrainHeight(x + e, z) - terrainHeight(x - e, z);
-  const gz = terrainHeight(x, z + e) - terrainHeight(x, z - e);
-  out.set(-gx, 0, -gz);
-  if (out.lengthSq() < 1e-6) out.set(x, 0, z).negate();
+// Karadan denize giden yön: en yakın adanın merkezinden dışarı doğru.
+// Adalar merkezden kıyıya hep alçalır; tepe ve çukurlara takılmaz.
+function seawardDirection(x, z, out) {
+  let best = ISLANDS[0], bestT = Infinity;
+  for (const isl of ISLANDS) {
+    const t = Math.hypot(x - isl.x, z - isl.z) / isl.r;
+    if (t < bestT) { bestT = t; best = isl; }
+  }
+  out.set(x - best.x, 0, z - best.z);
+  if (out.lengthSq() < 1e-6) out.set(1, 0, 0);
   return out.normalize();
 }
 

@@ -234,11 +234,11 @@ const Player = {
       if (minY > surfaceY + 0.3 && !this.flying) this.beached = true;
     }
     if (this.beached) {
-      // Karaya vurdu: suya doğru kay, can azalır
-      const down = terrainDownhill(this.pos.x, this.pos.z, new THREE.Vector3());
-      this.pos.addScaledVector(down, 7 * dt);
+      // Karaya vurdu: denize doğru kay, can azalır
+      const seaward = seawardDirection(this.pos.x, this.pos.z, new THREE.Vector3());
+      this.pos.addScaledVector(seaward, 12 * dt);
       this.vel.x *= 0.9; this.vel.z *= 0.9;
-      this.hp -= 6 * dt;
+      this.hp -= 5 * dt;
       this.beachMsgCd -= dt;
       if (this.beachMsgCd <= 0) { Hud.msg('Karaya vurdun! Suya dön!'); this.beachMsgCd = 2.5; }
       if (this.hp <= 0) { this.hp = 1; this.hurt(1); }
