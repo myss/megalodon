@@ -111,18 +111,16 @@ const Player = {
   radius() { return 2.0 * this.scale; },
 
   startFlying() {
-    const fromWater = !this.airborne && !this.beached;
     this.flying = true;
     this.airborne = false;
-    this.vel.y = Math.max(this.vel.y, fromWater ? 14 : 4);
-    if (fromWater) Effects.splash(new THREE.Vector3(this.pos.x, WATER_Y, this.pos.z), true);
+    this.vel.y = Math.max(this.vel.y, 4);
     Sound.lunge();
-    Hud.msg('UÇUYORSUN! (F ile in)');
+    Hud.msg('UÇUYORSUN! (Boşluk ile in)');
   },
 
   stopFlying() {
     this.flying = false;
-    this.airborne = this.pos.y > WATER_Y;
+    this.airborne = true;
   },
 
   mouthPos(out) {
@@ -165,13 +163,13 @@ const Player = {
     target *= this.speedMul;
 
     const surfaceY = WATER_Y - 0.5 * this.scale;
-    // Uçma: F ile (yüzeyde, havada ya da karada), ya da sudan fırlamışken Boşluk ile
-    const flyKey = Input.pressed.KeyF || (Input.pressed.Space && this.airborne);
-    if (flyKey) {
+    // Boşluk: suda atıl; sudan fırlamışken uç; uçarken in
+    if (Input.pressed.Space) {
       if (this.flying) this.stopFlying();
-      else if (this.stamina >= 15 && (this.airborne || this.beached || this.pos.y >= surfaceY - 1.5)) this.startFlying();
+      else if (this.airborne) {
+        if (this.stamina >= 15) this.startFlying();
+      } else if (this.lungeCd <= 0 && this.stamina >= 20 && !this.beached) this.lunge();
     }
-    if (Input.pressed.Space && this.lungeCd <= 0 && this.stamina >= 20 && !this.airborne && !this.beached && !this.flying) this.lunge();
     if (Input.clicked && this.biteCd <= 0) {
       this.biteCd = 0.55;
       this.biteAnim = 0.35;
