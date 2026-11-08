@@ -50,6 +50,9 @@ const Sound = (() => {
     wood() { noise(0.2, 2500, 0.4, 3); tone(140, 0.12, 0.2, 'square'); },
     crash() { noise(0.9, 1400, 0.8); noise(0.6, 300, 0.7); tone(70, 0.5, 0.3, 'sawtooth'); },
     cannon() { noise(0.7, 250, 0.9); tone(55, 0.4, 0.35, 'sine'); },
+    laser() { tone(1400, 0.12, 0.12, 'sawtooth'); tone(700, 0.15, 0.1, 'square', 0.03); },
+    tentacle() { noise(0.4, 600, 0.6, 2); tone(90, 0.3, 0.25, 'triangle'); },
+    transform() { [392, 523, 659, 880, 1175].forEach((f, i) => tone(f, 0.25, 0.14, 'sine', i * 0.06)); noise(0.5, 3000, 0.25); },
     alert() { tone(880, 0.12, 0.12, 'square'); tone(660, 0.15, 0.12, 'square', 0.12); },
   };
 })();

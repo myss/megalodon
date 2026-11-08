@@ -20,6 +20,7 @@ const Hud = {
       targetName: $('targetName'),
       targetBar: $('targetBar').firstElementChild,
       depth: $('depth'),
+      forms: $('forms'),
       map: $('minimap').getContext('2d'),
       bigmapCanvas: $('bigmap'),
       bigmap: $('bigmap').getContext('2d'),
@@ -58,7 +59,12 @@ const Hud = {
 
   update(dt, camera) {
     const P = Player;
-    this.el.level.textContent = 'Seviye ' + P.level;
+    this.el.level.textContent = 'Seviye ' + P.level + (P.form !== 'megalodon' ? ' · ' + P.formDef().name : '');
+    if (this.shownForm !== P.form) {
+      this.shownForm = P.form;
+      this.el.forms.innerHTML = FORM_ORDER.map((key, i) =>
+        '<div class="form' + (key === P.form ? ' active' : '') + '"><b>' + (i + 1) + '</b>' + FORMS[key].name + '</div>').join('');
+    }
     this.el.xp.style.width = (100 * P.xp / P.xpNeeded()) + '%';
     this.el.hp.style.width = (100 * P.hp / P.maxHp) + '%';
     this.el.food.style.width = P.hunger + '%';

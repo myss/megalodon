@@ -42,10 +42,25 @@ const Effects = {
     this.spawn(pos, { count: Math.floor(26 * s), color: 0xffffff, size: 0.35 * s, speed: 5 * s, up: 2.2, life: 1.2, gravity: 22, spread: 1.5 * s, opacity: 0.9, drag: 0.99 });
   },
 
+  // Lazer ışını: a'dan b'ye parlayan, hızla sönen çubuk
+  beam(a, b, color) {
+    const len = a.distanceTo(b);
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, len, 6, 1, true),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, depthWrite: false }));
+    m.position.copy(a).add(b).multiplyScalar(0.5);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+    this.scene.add(m);
+    this.list.push({
+      mesh: m, life: 0.18, maxLife: 0.18, size: 1, grow: 0, ownGeometry: true,
+      vel: new THREE.Vector3(), gravity: 0, rise: 0, drag: 1, startOpacity: 0.9,
+    });
+  },
+
   kill(i) {
     const p = this.list[i];
     this.scene.remove(p.mesh);
     p.mesh.material.dispose();
+    if (p.ownGeometry) p.mesh.geometry.dispose();
     this.list.splice(i, 1);
   },
 

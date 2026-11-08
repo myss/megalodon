@@ -36,6 +36,10 @@
 
   .float { position: absolute; font-weight: 800; font-size: 18px; text-shadow: 0 2px 3px #000; transform: translate(-50%, -50%); white-space: nowrap; }
 
+  #forms { position: absolute; left: 14px; bottom: 40px; display: flex; flex-direction: column; gap: 4px; }
+  #forms .form { font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 8px; background: rgba(0,20,40,.45); opacity: .7; }
+  #forms .form b { color: #ffe080; margin-right: 6px; }
+  #forms .form.active { opacity: 1; background: rgba(40,130,200,.8); box-shadow: 0 0 0 2px rgba(255,255,255,.6); }
   #hint { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 13px; opacity: .75; text-shadow: 0 1px 2px #000; }
 
   .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(10,60,100,.85), rgba(0,10,25,.95)); text-align: center; }
@@ -69,6 +73,7 @@
   <div id="crosshair"></div>
   <div id="messages"></div>
   <div id="floats"></div>
+  <div id="forms"></div>
   <div id="hint">Fare: yön · W: yüz · Shift: hızlı · C: gizli yüz · Boşluk: atıl, havada uç · Sol tık: ısır · M: harita · Esc: duraklat</div>
 </div>
 
@@ -86,6 +91,7 @@
     <b>Boşluk</b><span>Atıl! (yüzeyden sudan fırlarsın)</span>
     <b>Havada Boşluk</b><span>Uç! (uçarken tekrar Boşluk ile in)</span>
     <b>Sol tık</b><span>Isır</span>
+    <b>1 – 5</b><span>Dönüş: Megalodon, Robot, Kraken, Dev Kartal, Kollu Bacaklı</span>
     <b>M</b><span>Büyük harita</span>
     <b>Esc</b><span>Duraklat</span>
   </div>
@@ -115,6 +121,7 @@
 <script src="js/world.js"></script>
 <script src="js/models.js"></script>
 <script src="js/effects.js"></script>
+<script src="js/forms.js"></script>
 <script src="js/player.js"></script>
 <script src="js/fish.js"></script>
 <script src="js/enemies.js"></script>

@@ -7,11 +7,22 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.3, 1500);
 
+const LASER_RANGE = 90;
+
 const Game = {
   state: 'menu',
   inTrench: false,
   time: 0,
   saveTimer: 0,
+
+  // Vurulabilecek her şey: düşmanlar, kara hayvanları, gemiler. dist(p): yüzeyine uzaklık.
+  targets() {
+    const list = [];
+    for (const e of Enemies.list) list.push({ obj: e, dist: (p) => p.distanceTo(e.pos) - e.radius });
+    for (const a of Land.list) list.push({ obj: a, dist: (p) => p.distanceTo(a.targetPoint()) - 1 });
+    for (const s of Ships.list) if (!s.sinking) list.push({ obj: s, dist: (p) => s.distanceTo(p) });
+    return list;
+  },
 
   tryBite() {
     Sound.bite();
@@ -20,18 +31,9 @@ const Game = {
     let dmg = Player.damage * (Player.lungeTimer > 0 ? 1.6 : 1);
 
     let best = null, bestD = Infinity;
-    for (const e of Enemies.list) {
-      const d = mouth.distanceTo(e.pos) - e.radius;
-      if (d < reach && d < bestD) { best = e; bestD = d; }
-    }
-    for (const a of Land.list) {
-      const d = mouth.distanceTo(a.targetPoint()) - 1;
-      if (d < reach && d < bestD) { best = a; bestD = d; }
-    }
-    for (const s of Ships.list) {
-      if (s.sinking) continue;
-      const d = s.distanceTo(mouth);
-      if (d < reach && d < bestD) { best = s; bestD = d; }
+    for (const t of this.targets()) {
+      const d = t.dist(mouth);
+      if (d < reach && d < bestD) { best = t.obj; bestD = d; }
     }
     if (best) {
       // Fark edilmeden yapılan saldırı çok daha güçlü (gemiler hariç)
@@ -54,6 +56,50 @@ const Game = {
       Effects.blood(mouth, 3);
     } else {
       Effects.bubbles(mouth, 6);
+    }
+  },
+
+  // Robot: ileriye lazer; yoldaki ilk hedefi vurur
+  fireLaser() {
+    Sound.laser();
+    const from = Player.mouthPos(new THREE.Vector3());
+    const dir = Player.fwd.clone();
+    const targets = this.targets();
+    const p = new THREE.Vector3();
+    let hit = null, end = from.clone().addScaledVector(dir, LASER_RANGE);
+    for (let s = 0; s <= LASER_RANGE && !hit; s += 1.5) {
+      p.copy(from).addScaledVector(dir, s);
+      for (const t of targets) {
+        if (t.dist(p) < 1) { hit = t.obj; end = p.clone(); break; }
+      }
+    }
+    Effects.beam(from, end, 0xff2020);
+    if (hit) {
+      hit.hurt(Player.damage);
+      Hud.setTarget(hit);
+      Effects.spawn(end, { count: 10, color: 0xffa020, size: 0.4, speed: 6, life: 0.4, spread: 0.5, opacity: 1 });
+    }
+  },
+
+  // Kraken: dokunaçlarla çevresindeki herkese vurur, yakındaki balıkları yakalar
+  tentacleSweep() {
+    Sound.tentacle();
+    const R = 8 + 3 * Player.scale;
+    let nearest = null, nearestD = Infinity;
+    for (const t of this.targets()) {
+      const d = t.dist(Player.pos);
+      if (d < R) {
+        t.obj.hurt(Player.damage * 0.8);
+        if (d < nearestD) { nearest = t.obj; nearestD = d; }
+      }
+    }
+    if (nearest) Hud.setTarget(nearest);
+    const n = Fish.eatNear(Player.pos, R * 0.7);
+    if (n > 0) { Player.eat(n * 4); Player.addXp(n * 3); }
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      Effects.spawn(Player.pos.clone().add(new THREE.Vector3(Math.cos(a) * R * 0.8, 0, Math.sin(a) * R * 0.8)),
+        { count: 2, color: 0xc070ff, size: 0.6, speed: 2, life: 0.6, spread: 0.5, opacity: 0.8 });
     }
   },
 
@@ -113,7 +159,8 @@ document.getElementById('resetBtn').onclick = () => {
   Save.reset();
   Player.level = 1;
   Player.xp = 0;
-  Player.recalc();
+  Player.form = 'megalodon';
+  Player.buildModel();
   Player.respawn();
   showSaveInfo();
 };
@@ -130,6 +177,8 @@ window.addEventListener('keydown', (e) => {
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
   if (!Input.keys[e.code]) Input.pressed[e.code] = true;
   if (e.code === 'KeyM' && !Input.keys[e.code] && Game.state === 'playing') Hud.toggleBigMap();
+  const formIndex = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'].indexOf(e.code);
+  if (formIndex >= 0 && Game.state === 'playing') Player.transform(FORM_ORDER[formIndex]);
   Input.keys[e.code] = true;
 });
 window.addEventListener('keyup', (e) => { Input.keys[e.code] = false; });
