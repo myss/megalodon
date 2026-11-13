@@ -106,6 +106,37 @@
   #touch-form-3 { left: 104px; }
   #touch-form-4 { left: 152px; }
   #touch-form-5 { left: 200px; }
+  /* Yatay: telefonun yüksekliği çoğu zaman 300–340 px kalır. Form düğmeleri pedin üstüne binmesin
+     diye en üstte, panelin yanına dizilir; köşe düğmeleri haritanın solunda durur. */
+  @media (orientation: landscape) {
+    body.touch #stats { width: 150px; }
+    .touch-form { top: 8px; width: 40px; height: 40px; font-size: 20px; }
+    #touch-form-1 { left: 180px; }
+    #touch-form-2 { left: 224px; }
+    #touch-form-3 { left: 268px; }
+    #touch-form-4 { left: 312px; }
+    #touch-form-5 { left: 356px; }
+    #touch-pause { right: 136px; top: 8px; width: 40px; height: 40px; }
+    #touch-map { right: 180px; top: 8px; width: 40px; height: 40px; }
+    #touch-voice { right: 224px; top: 8px; width: 40px; height: 40px; }
+    body.touch #target { top: 56px; }
+    body.touch #voice { top: 96px; }
+  }
+  @media (orientation: landscape) and (max-height: 340px) {
+    body.touch #messages { bottom: 8px; max-width: calc(100vw - 470px); }
+    #touch-pad { left: 14px; bottom: 10px; width: 150px; height: 150px; }
+    #touch-pad span { width: 48px; height: 48px; font-size: 26px; }
+    #touch-pad [data-arrow="KeyW"] { top: 2px; left: 48px; }
+    #touch-pad [data-arrow="KeyS"] { bottom: 2px; left: 48px; }
+    #touch-pad [data-arrow="KeyA"] { left: 2px; top: 48px; }
+    #touch-pad [data-arrow="KeyD"] { right: 2px; top: 48px; }
+    #touch-up { left: 176px; bottom: 86px; width: 54px; height: 54px; font-size: 24px; }
+    #touch-down { left: 176px; bottom: 18px; width: 54px; height: 54px; font-size: 24px; }
+    #touch-jump { right: 14px; bottom: 12px; width: 80px; height: 80px; font-size: 34px; }
+    #touch-attack { right: 104px; bottom: 18px; width: 68px; height: 68px; font-size: 30px; }
+    #touch-run { right: 34px; bottom: 100px; width: 58px; height: 58px; font-size: 26px; }
+    #touch-sneak { right: 108px; bottom: 94px; width: 58px; height: 58px; font-size: 26px; }
+  }
   /* Dik ve dar: düğmeler pedin üstüne binmesin diye pedin yanında iki sütuna dizilir. */
   @media (orientation: portrait) {
     body.touch #messages { bottom: 262px; max-width: 90vw; }
@@ -118,6 +149,7 @@
     #touch-sneak { right: 24px; bottom: 188px; width: 64px; height: 64px; }
     #touch-down { left: auto; right: 110px; bottom: 108px; }
     #touch-up { left: auto; right: 110px; bottom: 180px; }
+    .touch-form { top: 140px; }
     #touch-pause { right: 16px; top: 140px; }
     #touch-map { right: 16px; top: 190px; }
     #touch-voice { right: 16px; top: 240px; }
