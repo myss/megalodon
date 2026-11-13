@@ -450,7 +450,9 @@ const Player = {
   },
 
   updateCamera(camera, dt) {
-    const dist = 11 * this.scale + 5;
+    // Dik ve dar ekranda yatay görüş dar kalır; kamera biraz geri çekilir ki megalodon sığsın
+    const narrow = clamp(0.75 / camera.aspect, 1, 1.6);
+    const dist = (11 * this.scale + 5) * narrow;
     const height = 3.2 * this.scale;
     const fwd = forwardFrom(this.yaw, this.pitch * 0.85, new THREE.Vector3());
     const desired = this.pos.clone().addScaledVector(fwd, -dist);
