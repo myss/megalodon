@@ -91,8 +91,9 @@
   #touch-pad [data-arrow="KeyS"] { bottom: 2px; left: 54px; }
   #touch-pad [data-arrow="KeyA"] { left: 2px; top: 54px; }
   #touch-pad [data-arrow="KeyD"] { right: 2px; top: 54px; }
-  #touch-up { left: 204px; bottom: 100px; width: 60px; height: 60px; font-size: 26px; }
-  #touch-down { left: 204px; bottom: 28px; width: 60px; height: 60px; font-size: 26px; }
+  /* Yukarı ve aşağı sağ başparmakta: sol başparmak pedle ilerlerken sağ başparmak yön verir */
+  #touch-up { right: 214px; bottom: 100px; width: 60px; height: 60px; font-size: 26px; }
+  #touch-down { right: 214px; bottom: 28px; width: 60px; height: 60px; font-size: 26px; }
   #touch-jump { right: 20px; bottom: 20px; width: 92px; height: 92px; font-size: 38px; }
   #touch-attack { right: 124px; bottom: 28px; width: 78px; height: 78px; font-size: 34px; }
   #touch-run { right: 44px; bottom: 124px; width: 68px; height: 68px; font-size: 30px; }
@@ -123,15 +124,15 @@
     body.touch #voice { top: 96px; }
   }
   @media (orientation: landscape) and (max-height: 340px) {
-    body.touch #messages { bottom: 8px; max-width: calc(100vw - 470px); }
+    body.touch #messages { bottom: 8px; max-width: calc(100vw - 490px); }
     #touch-pad { left: 14px; bottom: 10px; width: 150px; height: 150px; }
     #touch-pad span { width: 48px; height: 48px; font-size: 26px; }
     #touch-pad [data-arrow="KeyW"] { top: 2px; left: 48px; }
     #touch-pad [data-arrow="KeyS"] { bottom: 2px; left: 48px; }
     #touch-pad [data-arrow="KeyA"] { left: 2px; top: 48px; }
     #touch-pad [data-arrow="KeyD"] { right: 2px; top: 48px; }
-    #touch-up { left: 176px; bottom: 86px; width: 54px; height: 54px; font-size: 24px; }
-    #touch-down { left: 176px; bottom: 18px; width: 54px; height: 54px; font-size: 24px; }
+    #touch-up { right: 184px; bottom: 86px; width: 54px; height: 54px; font-size: 24px; }
+    #touch-down { right: 184px; bottom: 18px; width: 54px; height: 54px; font-size: 24px; }
     #touch-jump { right: 14px; bottom: 12px; width: 80px; height: 80px; font-size: 34px; }
     #touch-attack { right: 104px; bottom: 18px; width: 68px; height: 68px; font-size: 30px; }
     #touch-run { right: 34px; bottom: 100px; width: 58px; height: 58px; font-size: 26px; }
@@ -147,8 +148,8 @@
     #touch-attack { right: 104px; bottom: 24px; width: 72px; height: 72px; }
     #touch-run { right: 24px; bottom: 112px; width: 64px; height: 64px; }
     #touch-sneak { right: 24px; bottom: 188px; width: 64px; height: 64px; }
-    #touch-down { left: auto; right: 110px; bottom: 108px; }
-    #touch-up { left: auto; right: 110px; bottom: 180px; }
+    #touch-down { right: 110px; bottom: 108px; }
+    #touch-up { right: 110px; bottom: 180px; }
     .touch-form { top: 140px; }
     #touch-pause { right: 16px; top: 140px; }
     #touch-map { right: 16px; top: 190px; }
@@ -223,7 +224,8 @@
     <b>P / Esc</b><span>Durdur</span>
     <b>Home</b><span>Ekran düğmelerini aç, kapat</span>
   </div>
-  <p class="touch-only">Soldaki oklarla yüz ve dön, ⤴️ ⤵️ ile yukarı ya da aşağı yönel. ⬆️ atılır; sudan fırlamışken
+  <p class="touch-only">Soldaki oklarla yüz ve dön. Yukarı ya da aşağı gitmek için ▲'ya basılı tutarken sağdaki ⤴️ ⤵️'ye bas;
+     kartalla yükselmek de böyle. ⬆️ atılır; sudan fırlamışken
      bir daha basınca uçarsın. 🦷 ısırır, 💨 hızlı yüzmeyi, 🤫 gizli yüzmeyi açar. 🦈 🤖 🦑 🦅 💪 ile dönüşürsün.
      🗺️ büyük harita, 🎤 sesli dönüşüm, ⏸️ durdurur.</p>
   <p>Balıkçı teknelerini ve <b>korsan gemisini</b> ısırarak batır. Uçarken üstlerine dal, parça pinçik olsunlar!
