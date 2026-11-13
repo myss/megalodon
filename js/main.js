@@ -149,13 +149,24 @@ function startPlaying() {
   Sound.unlock();
   ['startScreen', 'pauseScreen', 'deathScreen'].forEach((id) => document.getElementById(id).classList.add('hidden'));
   Game.state = 'playing';
-  lockPointer();
+  if (!touchControls) lockPointer();
 }
 
-document.getElementById('playBtn').onclick = startPlaying;
-document.getElementById('resumeBtn').onclick = startPlaying;
-document.getElementById('respawnBtn').onclick = () => { Player.respawn(); startPlaying(); };
-document.getElementById('resetBtn').onclick = () => {
+function pause() {
+  Game.state = 'paused';
+  Save.write();
+  document.getElementById('pauseScreen').classList.remove('hidden');
+}
+
+// Ekran düğmesine basınca odak onda kalırsa Boşluk (atılma) ona yeniden basar
+const onButton = (id, action) => {
+  const b = document.getElementById(id);
+  b.onclick = () => { b.blur(); action(); };
+};
+onButton('playBtn', startPlaying);
+onButton('resumeBtn', startPlaying);
+onButton('respawnBtn', () => { Player.respawn(); startPlaying(); });
+onButton('resetBtn', () => {
   if (!confirm('Kayıtlı oyun silinsin mi?')) return;
   Save.reset();
   Player.level = 1;
@@ -164,24 +175,45 @@ document.getElementById('resetBtn').onclick = () => {
   Player.buildModel();
   Player.respawn();
   showSaveInfo();
-};
-
-document.addEventListener('pointerlockchange', () => {
-  if (!document.pointerLockElement && Game.state === 'playing') {
-    Game.state = 'paused';
-    Save.write();
-    document.getElementById('pauseScreen').classList.remove('hidden');
-  }
 });
 
+document.addEventListener('pointerlockchange', () => {
+  if (!document.pointerLockElement && Game.state === 'playing') pause();
+});
+
+// Tuşlar e.code ile, yani klavyedeki yerleriyle tanınır (Kaplan Macerası'ndaki gibi)
+const GAME_KEYS = ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+const FORM_KEYS = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'];
+
+// Bir tuşun inişi; ekran düğmeleri de bunu çağırır
+function pressKey(code) {
+  if (!Input.keys[code]) {
+    Input.pressed[code] = true;
+    onKeyPressed(code);
+  }
+  Input.keys[code] = true;
+}
+
+function onKeyPressed(code) {
+  if (code === 'KeyP' || code === 'Escape') {
+    if (Game.state === 'playing') {
+      if (document.pointerLockElement) document.exitPointerLock();
+      else pause();
+    } else if (Game.state === 'paused') startPlaying();
+    return;
+  }
+  if (Game.state !== 'playing') return;
+  if (code === 'KeyM') Hud.toggleBigMap();
+  if (code === 'KeyV') Voice.toggle();
+  if (code === 'KeyQ') Player.switchSprint();
+  if (code === 'KeyC') Player.switchSneak();
+  const formIndex = FORM_KEYS.indexOf(code);
+  if (formIndex >= 0) Player.transform(FORM_ORDER[formIndex]);
+}
+
 window.addEventListener('keydown', (e) => {
-  if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
-  if (!Input.keys[e.code]) Input.pressed[e.code] = true;
-  if (e.code === 'KeyM' && !Input.keys[e.code] && Game.state === 'playing') Hud.toggleBigMap();
-  if (e.code === 'KeyV' && !Input.keys[e.code] && Game.state === 'playing') Voice.toggle();
-  const formIndex = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'].indexOf(e.code);
-  if (formIndex >= 0 && Game.state === 'playing') Player.transform(FORM_ORDER[formIndex]);
-  Input.keys[e.code] = true;
+  if (GAME_KEYS.includes(e.code)) e.preventDefault();
+  pressKey(e.code);
 });
 window.addEventListener('keyup', (e) => { Input.keys[e.code] = false; });
 window.addEventListener('blur', () => { Input.keys = {}; });
@@ -193,7 +225,7 @@ document.addEventListener('mousemove', (e) => {
 });
 canvas.addEventListener('mousedown', (e) => {
   if (e.button !== 0 || Game.state !== 'playing') return;
-  if (document.pointerLockElement !== canvas) lockPointer();
+  if (document.pointerLockElement !== canvas && !touchControls) lockPointer();
   Input.clicked = true;
 });
 
@@ -222,6 +254,7 @@ function frame(now) {
     Effects.update(dt);
     Player.updateCamera(camera, dt);
     Hud.update(dt, camera);
+    if (touchControls) showTouchSwitches();
     const inTrenchNow = Enemies.playerInTrench();
     if (inTrenchNow && !Game.inTrench) {
       Hud.big('MARİANA ÇUKURU');

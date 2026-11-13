@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Megalodon</title>
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #06243a; font-family: "Segoe UI", Arial, sans-serif; color: #fff; user-select: none; }
+  * { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #06243a; font-family: "Segoe UI", Arial, sans-serif; color: #fff; }
   canvas#game { display: block; }
 
   #hud { position: fixed; inset: 0; pointer-events: none; }
@@ -43,7 +44,10 @@
   #voice { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); font-size: 15px; font-weight: 700; padding: 6px 14px; border-radius: 10px; background: rgba(200,40,60,.8); text-shadow: 0 1px 2px #000; }
   #hint { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 13px; opacity: .75; text-shadow: 0 1px 2px #000; }
 
-  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(10,60,100,.85), rgba(0,10,25,.95)); text-align: center; }
+  .overlay { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding: 16px; overflow-y: auto; background: radial-gradient(ellipse at center, rgba(10,60,100,.85), rgba(0,10,25,.95)); text-align: center; }
+  /* Sığmayan ekranda kaydırılabilsin, sığınca ortada dursun */
+  .overlay > :first-child { margin-top: auto; }
+  .overlay > :last-child { margin-bottom: auto; }
   .overlay h1 { font-size: 72px; margin: 0 0 6px; letter-spacing: 6px; color: #bfe9ff; text-shadow: 0 4px 20px #000; }
   .overlay h2 { font-size: 44px; margin: 0 0 10px; color: #ff7070; }
   .overlay p { max-width: 560px; line-height: 1.5; opacity: .9; }
@@ -53,6 +57,71 @@
   .controls { display: grid; grid-template-columns: auto auto; gap: 4px 18px; text-align: left; margin: 14px 0; font-size: 15px; }
   .controls b { color: #ffe080; }
   .hidden { display: none !important; }
+
+  #touch-controls { display: none; }
+  .touch-only { display: none; }
+  body.touch #touch-controls { display: block; }
+  body.touch .touch-only { display: block; }
+  body.touch .controls, body.touch #hint, body.touch #forms { display: none; }
+  body.touch #game { touch-action: none; }
+  body.touch #stats { top: 8px; left: 8px; width: 170px; padding: 6px 8px; }
+  body.touch #level { font-size: 14px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  body.touch .bar { height: 9px; margin: 3px 0; }
+  body.touch .bar > span { font-size: 8px; top: -2px; }
+  body.touch #depth, body.touch #stealth { display: inline-block; margin-top: 3px; font-size: 11px; }
+  body.touch #stealth { margin-left: 6px; padding: 1px 6px; }
+  body.touch #minimap { top: 8px; right: 8px; width: 120px; height: 120px; }
+  body.touch #target { width: 200px; }
+  body.touch #targetName { font-size: 13px; }
+  body.touch #voice { top: 66px; font-size: 12px; }
+  body.touch #messages { top: auto; bottom: 12px; left: 50%; right: auto; transform: translateX(-50%); width: max-content; max-width: calc(100vw - 560px); }
+  body.touch .msg { width: fit-content; margin: 2px auto; padding: 2px 10px; border-radius: 12px; background: #000a; font-size: 14px; }
+  body.touch .msg.big { font-size: 22px; }
+  body.touch .overlay h1 { font-size: 40px; letter-spacing: 3px; }
+  body.touch .overlay h2 { font-size: 30px; }
+  body.touch .overlay p { font-size: 15px; }
+  body.touch .overlay button { font-size: 20px; }
+  body.touch .overlay button.small { font-size: 14px; }
+  #touch-controls > * { position: fixed; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 3px solid #fffc; border-radius: 50%; background: #0005; color: #fff; touch-action: none; cursor: pointer; }
+  #touch-controls .pressed { background: #2fa8e0cc; }
+  #touch-controls .on { background: #e8710acc; }
+  #touch-pad { left: 20px; bottom: 20px; width: 170px; height: 170px; }
+  #touch-pad span { position: absolute; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 30px; pointer-events: none; }
+  #touch-pad [data-arrow="KeyW"] { top: 2px; left: 54px; }
+  #touch-pad [data-arrow="KeyS"] { bottom: 2px; left: 54px; }
+  #touch-pad [data-arrow="KeyA"] { left: 2px; top: 54px; }
+  #touch-pad [data-arrow="KeyD"] { right: 2px; top: 54px; }
+  #touch-up { left: 204px; bottom: 100px; width: 60px; height: 60px; font-size: 26px; }
+  #touch-down { left: 204px; bottom: 28px; width: 60px; height: 60px; font-size: 26px; }
+  #touch-jump { right: 20px; bottom: 20px; width: 92px; height: 92px; font-size: 38px; }
+  #touch-attack { right: 124px; bottom: 28px; width: 78px; height: 78px; font-size: 34px; }
+  #touch-run { right: 44px; bottom: 124px; width: 68px; height: 68px; font-size: 30px; }
+  #touch-sneak { right: 128px; bottom: 118px; width: 68px; height: 68px; font-size: 30px; }
+  #touch-pause { right: 144px; top: 14px; width: 44px; height: 44px; font-size: 20px; }
+  #touch-map { right: 194px; top: 14px; width: 44px; height: 44px; font-size: 20px; }
+  #touch-voice { right: 244px; top: 14px; width: 44px; height: 44px; font-size: 20px; }
+  .touch-form { top: 122px; width: 44px; height: 44px; font-size: 22px; }
+  #touch-form-1 { left: 8px; }
+  #touch-form-2 { left: 56px; }
+  #touch-form-3 { left: 104px; }
+  #touch-form-4 { left: 152px; }
+  #touch-form-5 { left: 200px; }
+  /* Dik ve dar: düğmeler pedin üstüne binmesin diye pedin yanında iki sütuna dizilir. */
+  @media (orientation: portrait) {
+    body.touch #messages { bottom: 262px; max-width: 90vw; }
+    body.touch #target { top: 186px; width: 60vw; }
+    body.touch #voice { top: 222px; max-width: 60vw; }
+    #touch-pad { left: 12px; }
+    #touch-jump { right: 16px; bottom: 20px; width: 80px; height: 80px; font-size: 34px; }
+    #touch-attack { right: 104px; bottom: 24px; width: 72px; height: 72px; }
+    #touch-run { right: 24px; bottom: 112px; width: 64px; height: 64px; }
+    #touch-sneak { right: 24px; bottom: 188px; width: 64px; height: 64px; }
+    #touch-down { left: auto; right: 110px; bottom: 108px; }
+    #touch-up { left: auto; right: 110px; bottom: 180px; }
+    #touch-pause { right: 16px; top: 140px; }
+    #touch-map { right: 16px; top: 190px; }
+    #touch-voice { right: 16px; top: 240px; }
+  }
 </style>
 </head>
 <body>
@@ -76,7 +145,27 @@
   <div id="floats"></div>
   <div id="forms"></div>
   <div id="voice" class="hidden"></div>
-  <div id="hint">Fare: yön · W: yüz · Shift: hızlı · C: gizli yüz · Boşluk: atıl, havada uç · Sol tık: ısır · 1-5: dönüş · V: sesli dönüş · M: harita · Esc: duraklat</div>
+  <div id="hint">Fare: yön · W: yüz · Q / Shift: hızlı · C: gizli yüz · Boşluk: atıl, havada uç · F / sol tık: ısır · 1-5: dönüş · V: sesli dönüş · M: harita · P / Esc: durdur</div>
+</div>
+
+<div id="touch-controls">
+  <div id="touch-pad" role="group" aria-label="Yüz ve dön">
+    <span data-arrow="KeyW">▲</span><span data-arrow="KeyS">▼</span><span data-arrow="KeyA">◀</span><span data-arrow="KeyD">▶</span>
+  </div>
+  <div id="touch-up" data-key="ArrowUp" role="button" aria-label="Yukarı yönel">⤴️</div>
+  <div id="touch-down" data-key="ArrowDown" role="button" aria-label="Aşağı yönel">⤵️</div>
+  <div id="touch-jump" data-key="Space" role="button" aria-label="Atıl, havada uç">⬆️</div>
+  <div id="touch-attack" data-key="KeyF" role="button" aria-label="Isır">🦷</div>
+  <div id="touch-run" data-key="KeyQ" role="button" aria-label="Hızlı yüzmeyi aç, kapat">💨</div>
+  <div id="touch-sneak" data-key="KeyC" role="button" aria-label="Gizli yüzmeyi aç, kapat">🤫</div>
+  <div id="touch-pause" data-key="KeyP" role="button" aria-label="Durdur">⏸️</div>
+  <div id="touch-map" data-key="KeyM" role="button" aria-label="Büyük harita">🗺️</div>
+  <div id="touch-voice" data-key="KeyV" role="button" aria-label="Sesli dönüşüm">🎤</div>
+  <div id="touch-form-1" class="touch-form" data-key="Digit1" role="button" aria-label="Megalodon">🦈</div>
+  <div id="touch-form-2" class="touch-form" data-key="Digit2" role="button" aria-label="Robot Megalodon">🤖</div>
+  <div id="touch-form-3" class="touch-form" data-key="Digit3" role="button" aria-label="Kraken">🦑</div>
+  <div id="touch-form-4" class="touch-form" data-key="Digit4" role="button" aria-label="Dev Kartal">🦅</div>
+  <div id="touch-form-5" class="touch-form" data-key="Digit5" role="button" aria-label="Kollu Bacaklı Megalodon">💪</div>
 </div>
 
 <div id="startScreen" class="overlay">
@@ -88,16 +177,21 @@
     <b>Fare</b><span>Yön ver</span>
     <b>W / S</b><span>İleri / Yavaşla</span>
     <b>A / D</b><span>Sola / Sağa dön</span>
-    <b>Shift</b><span>Hızlı yüz</span>
-    <b>C</b><span>Gizli yüz (hayvanlar fark etmez)</span>
+    <b>Oklar ↑ ↓</b><span>Yukarı / Aşağı yönel</span>
+    <b>Q</b><span>Hızlı yüzmeyi aç, kapat (Shift'e basılı tutmak da olur)</span>
+    <b>C</b><span>Gizli yüzmeyi aç, kapat (hayvanlar fark etmez)</span>
     <b>Boşluk</b><span>Atıl! (yüzeyden sudan fırlarsın)</span>
     <b>Havada Boşluk</b><span>Uç! (uçarken tekrar Boşluk ile in)</span>
-    <b>Sol tık</b><span>Isır</span>
+    <b>F / Sol tık</b><span>Isır</span>
     <b>1 – 5</b><span>Dönüş: Megalodon, Robot, Kraken, Dev Kartal, Kollu Bacaklı</span>
     <b>V</b><span>Sesli dönüşüm: aç, sonra "robot", "kraken", "kartal"... de (Chrome/Edge, internet gerekir)</span>
     <b>M</b><span>Büyük harita</span>
-    <b>Esc</b><span>Duraklat</span>
+    <b>P / Esc</b><span>Durdur</span>
+    <b>Home</b><span>Ekran düğmelerini aç, kapat</span>
   </div>
+  <p class="touch-only">Soldaki oklarla yüz ve dön, ⤴️ ⤵️ ile yukarı ya da aşağı yönel. ⬆️ atılır; sudan fırlamışken
+     bir daha basınca uçarsın. 🦷 ısırır, 💨 hızlı yüzmeyi, 🤫 gizli yüzmeyi açar. 🦈 🤖 🦑 🦅 💪 ile dönüşürsün.
+     🗺️ büyük harita, 🎤 sesli dönüşüm, ⏸️ durdurur.</p>
   <p>Balıkçı teknelerini ve <b>korsan gemisini</b> ısırarak batır. Uçarken üstlerine dal, parça pinçik olsunlar!
      Korsanlar top atar; batan korsan gemisinin hazinesini denizin dibinde bul.</p>
   <p>Haritadaki mor bölge <b>Mariana Çukuru</b>. Çok derine dal; orada karanlıkta parlayan tuhaf canlılar yaşıyor!</p>
@@ -132,6 +226,7 @@
 <script src="js/land.js"></script>
 <script src="js/ships.js"></script>
 <script src="js/hud.js"></script>
+<script src="js/touch.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

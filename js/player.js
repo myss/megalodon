@@ -32,6 +32,7 @@ const Player = {
   scale: 1, speedMul: 1, damage: 18,
   biteCd: 0, biteAnim: 0, lungeCd: 0, lungeTimer: 0,
   airborne: false, flying: false, beached: false, grounded: false, stealthy: false, sprinting: false,
+  sprintSwitchedOn: false, sneakSwitchedOn: false,
   hurtFlash: 0, swimPhase: 0, wingPhase: 0, dead: false, beachMsgCd: 0,
 
   init(scene) {
@@ -193,6 +194,20 @@ const Player = {
     Sound.lunge();
   },
 
+  // Q ve C bir basışta açılıp ikincide kapanır: ekran klavyesi iki tuşu birden basılı tutamaz.
+  // Shift'e basılı tutmak da hızlı yüzdürür.
+  switchSprint() {
+    this.sprintSwitchedOn = !this.sprintSwitchedOn;
+    if (this.sprintSwitchedOn) this.sneakSwitchedOn = false;
+    Hud.msg(this.sprintSwitchedOn ? 'Hızlı yüzme açık! 💨 Q ile kapatırsın.' : 'Hızlı yüzme kapalı.');
+  },
+
+  switchSneak() {
+    this.sneakSwitchedOn = !this.sneakSwitchedOn;
+    if (this.sneakSwitchedOn) this.sprintSwitchedOn = false;
+    Hud.msg(this.sneakSwitchedOn ? 'Gizli yüzme açık! 🤫 C ile kapatırsın.' : 'Gizli yüzme kapalı.');
+  },
+
   attack() {
     const F = this.formDef();
     this.biteAnim = 0.35;
@@ -219,8 +234,8 @@ const Player = {
     forwardFrom(this.yaw, this.pitch, this.fwd);
 
     // Hız
-    const sneaking = !!k.KeyC;
-    this.sprinting = !!(k.ShiftLeft || k.ShiftRight) && !!k.KeyW && this.stamina > 1 && !sneaking;
+    const sneaking = this.sneakSwitchedOn;
+    this.sprinting = (this.sprintSwitchedOn || !!(k.ShiftLeft || k.ShiftRight)) && !!k.KeyW && this.stamina > 1 && !sneaking;
     let target = 0;
     if (k.KeyW) target = sneaking ? 5 : this.sprinting ? 25 : 12;
     target *= this.speedMul;
@@ -242,7 +257,7 @@ const Player = {
         if (this.grounded) { this.vel.y = 15; this.grounded = false; this.airborne = true; }
       } else if (this.lungeCd <= 0 && this.stamina >= 20 && !this.beached) this.lunge();
     }
-    if (Input.clicked && this.biteCd <= 0) this.attack();
+    if ((Input.clicked || Input.pressed.KeyF) && this.biteCd <= 0) this.attack();
 
     if (this.flying) {
       const flySpeed = (k.KeyW ? (this.sprinting ? 34 : 20) : 0) * this.speedMul;
