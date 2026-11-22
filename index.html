@@ -8,6 +8,7 @@
   * { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #06243a; font-family: "Segoe UI", Arial, sans-serif; color: #fff; }
   canvas#game { display: block; }
+  #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
 
   #hud { position: fixed; inset: 0; pointer-events: none; }
   #stats { position: absolute; top: 14px; left: 14px; width: 260px; background: rgba(0,20,40,.45); padding: 10px 12px; border-radius: 10px; }
@@ -167,6 +168,7 @@
 </head>
 <body>
 <canvas id="game"></canvas>
+<div id="flash"></div>
 
 <div id="hud">
   <div id="stats">
@@ -241,6 +243,8 @@
      🗺️ büyük harita, 🎤 sesli dönüşüm, ⏸️ durdurur. Sesi durdurunca çıkan ekrandan açıp kapatırsın.</p>
   <p>Balıkçı teknelerini ve <b>korsan gemisini</b> ısırarak batır. Uçarken üstlerine dal, parça pinçik olsunlar!
      Korsanlar top atar; batan korsan gemisinin hazinesini denizin dibinde bul.</p>
+  <p>Haritadaki renkli noktalar <b>portallar</b>: aynı renkten iki portal birbirine bağlı, birinden girince ötekinden
+     çıkarsın. Okyanusta çok iyi saklanmış, bambaşka bir yere açılan bir portal daha olduğu söyleniyor...</p>
   <p>Haritadaki mor bölge <b>Mariana Çukuru</b>. Çok derine dal; orada karanlıkta parlayan tuhaf canlılar yaşıyor!</p>
   <button id="muteBtnStart" class="small mute-button"></button>
   <button id="resetBtn" class="small">Kaydı sil</button>
@@ -273,6 +277,8 @@
 <script src="js/land.js"></script>
 <script src="js/ships.js"></script>
 <script src="js/mysteries.js"></script>
+<script src="js/portals.js"></script>
+<script src="js/space.js"></script>
 <script src="js/hud.js"></script>
 <script src="js/touch.js"></script>
 <script src="js/main.js"></script>

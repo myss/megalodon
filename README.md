@@ -21,6 +21,12 @@ Tek ve kocaman bir okyanus:
 - **Gemiler:** Balıkçı tekneleri megalodondan kaçıyor. Korsan gemisi ise onu kovalayıp top atıyor. Batan korsan gemisinin hazine sandığı denizin dibine iniyor.
 - **Mariana Çukuru:** Yaklaşık 11.000 metre derinliğinde, dik duvarlı bir kanyon. Aşağı indikçe ortalık kararıyor. Dipte parlayan tüp solucanları ve sıcak su bacaları var. Fener balıkları, engerek balıkları, goblin köpekbalıkları, vampir kalamarlar, dev izopodlar ve dumbo ahtapotları yalnızca burada yaşıyor. Çukurun boss'u da Kraken.
 
+## Portallar ve uzay
+
+Okyanusta dört çift renkli portal var. Aynı renkten iki portal birbirine bağlı: Mariana Çukuru'nun dibinden gökyüzüne, su yüzeyinden ve bir adanın kıyısından çukurun dibine, bir adadan ötekine. Yerleri haritada görünüyor.
+
+Bir de çok iyi saklanmış, haritada görünmeyen bir portal var. O portal uzaya açılıyor. Uzayda Güneş, sekiz gezegen ve bütün gezegenlerin birleşimi olan Her Şey Gezegeni var. Gezegenlere girince yüzeylerine iniliyor; Dünya'ya girince okyanusa geri dönülüyor.
+
 ## Gizemler
 
 Okyanusta gizemler saklı. Ne olduklarını burada söylemiyoruz. Her gizemin, çok zor bir yere saklanmış tek bir haritası var. Harita bulununca gizemin yeri işaretleniyor, ama dolaşarak haritasız bulmak da mümkün. Hepsini çözene bir sürpriz var.
@@ -62,6 +68,8 @@ Düz JavaScript ve [Three.js](https://threejs.org) kullanıldı, derlemeye gerek
 - `js/land.js`: Kıyıya su içmeye gelen kara hayvanları.
 - `js/ships.js`: Balıkçı tekneleri, korsan gemisi, top gülleleri, parçalanma ve hazine.
 - `js/mysteries.js`: Gizemler ve haritaları (içine bakarsanız sürpriz bozulur).
+- `js/portals.js`: Renkli portal çiftleri ve gizli portal.
+- `js/space.js`: Uzay, gezegenler, uzay istasyonu ve gezegen yüzeyleri.
 - `js/effects.js`: Kan bulutu, kabarcık, su sıçraması ve lazer.
 - `js/hud.js`: Ekrandaki göstergeler, mesajlar ve haritalar.
 - `js/voice.js`: Sesli dönüşüm.
@@ -98,6 +106,12 @@ One huge ocean. The in-game text is Turkish:
 - **The open sea:** sharks, barracudas, giant squids, giant octopuses, jellyfish, killer whales and sperm whales, and a mosasaur at higher levels; turtles, tuna and schools of fish are prey
 - **The ships:** fishing boats flee the megalodon, while the pirate ship chases it and fires its cannons; a sunk pirate ship's treasure chest sinks to the bottom
 - **The Mariana Trench:** a steep canyon about 11,000 metres deep that grows darker on the way down, with glowing tube worms and hydrothermal vents at the bottom; anglerfish, viperfish, goblin sharks, vampire squids, giant isopods and dumbo octopuses live only here, and the Kraken is its boss
+
+## Portals and space
+
+The ocean has four pairs of coloured portals. The two portals of a colour are linked: from the bottom of the Mariana Trench to the sky, from the surface and from an island's shore down to the bottom of the trench, and from one island to another. The map shows where they are.
+
+One more portal is well hidden and is not on the map. It opens into space, where the Sun, the eight planets and the Everything Planet, a mix of all the planets, wait. Flying into a planet lands you on its surface; flying into the Earth takes you back to the ocean.
 
 ## Mysteries
 

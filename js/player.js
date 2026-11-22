@@ -208,6 +208,40 @@ const Player = {
     Hud.msg(this.sneakSwitchedOn ? 'Gizli yüzme açık! 🤫 C ile kapatırsın.' : 'Gizli yüzme kapalı.');
   },
 
+  // Uzayda ve gezegenlerde: su da yer çekimi de yok, her form serbestçe uçar
+  freeFlight(dt, k, turnRate) {
+    const inSpace = Game.world === 'space';
+    const fast = this.sprintSwitchedOn || k.ShiftLeft || k.ShiftRight;
+    const speed = (k.KeyW ? (fast ? 170 : 70) : k.KeyS ? -15 : 0) * (inSpace ? 1 : 0.45);
+    this.vel.lerp(this.fwd.clone().multiplyScalar(speed), 1 - Math.exp(-dt * 2));
+    this.pos.addScaledVector(this.vel, dt);
+    this.flying = true;
+    this.airborne = this.beached = this.grounded = false;
+    this.sprinting = !!k.KeyW && fast;
+    if (!inSpace) {
+      const floor = PlanetWorld.height(this.pos.x, this.pos.z) + 1.5 * this.scale;
+      if (this.pos.y < floor) { this.pos.y = floor; if (this.vel.y < 0) this.vel.y = 0; }
+      this.pos.x = clamp(this.pos.x, -PLANET_HALF * 0.95, PLANET_HALF * 0.95);
+      this.pos.z = clamp(this.pos.z, -PLANET_HALF * 0.95, PLANET_HALF * 0.95);
+    }
+    if ((Input.clicked || Input.pressed.KeyF) && this.biteCd <= 0) { this.biteCd = 0.55; this.biteAnim = 0.35; Sound.bite(); }
+    this.biteCd -= dt;
+    this.biteAnim -= dt;
+    this.lungeCd -= dt;
+    this.lungeTimer -= dt;
+    this.hurtFlash -= dt;
+    this.stamina = Math.min(100, this.stamina + 15 * dt);
+    this.stealthy = false;
+    this.updateModel(dt, this.vel.length(), turnRate, false);
+  },
+
+  moveToScene(s) {
+    if (this.scene === s) return;
+    this.scene.remove(this.model.group);
+    this.scene = s;
+    s.add(this.model.group);
+  },
+
   attack() {
     const F = this.formDef();
     this.biteAnim = 0.35;
@@ -239,6 +273,8 @@ const Player = {
     let target = 0;
     if (k.KeyW) target = sneaking ? 5 : this.sprinting ? 25 : 12;
     target *= this.speedMul;
+
+    if (Game.world !== 'ocean') { this.freeFlight(dt, k, turnRate); return; }
 
     const surfaceY = WATER_Y - 0.5 * this.scale;
     const ground = terrainHeight(this.pos.x, this.pos.z);
@@ -457,9 +493,13 @@ const Player = {
     const fwd = forwardFrom(this.yaw, this.pitch * 0.85, new THREE.Vector3());
     const desired = this.pos.clone().addScaledVector(fwd, -dist);
     desired.y += height;
-    const ground = terrainHeight(desired.x, desired.z) + 1.5;
-    if (desired.y < ground) desired.y = ground;
-    camera.position.lerp(desired, 1 - Math.exp(-dt * 6));
+    if (Game.world !== 'space') {
+      const ground = (Game.world === 'planet' ? PlanetWorld.height(desired.x, desired.z) : terrainHeight(desired.x, desired.z)) + 1.5;
+      if (desired.y < ground) desired.y = ground;
+    }
+    // Portaldan geçince kamera uzun yolu kaymadan yeni yere atlar
+    if (this.snapCamera) { camera.position.copy(desired); this.snapCamera = false; }
+    else camera.position.lerp(desired, 1 - Math.exp(-dt * 6));
     if (this.hurtFlash > 0) {
       camera.position.x += rand(-0.3, 0.3);
       camera.position.y += rand(-0.3, 0.3);

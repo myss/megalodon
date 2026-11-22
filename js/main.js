@@ -9,11 +9,80 @@ const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerH
 
 const LASER_RANGE = 90;
 
+const OCEAN_FAR = 1500, PLANET_FAR = 4000, SPACE_FAR = 30000;
+
 const Game = {
   state: 'menu',
+  world: 'ocean',   // 'ocean' | 'space' | 'planet'
   inTrench: false,
   time: 0,
   saveTimer: 0,
+
+  currentScene() {
+    return this.world === 'space' ? Space.scene : this.world === 'planet' ? PlanetWorld.scene : scene;
+  },
+
+  // Portaldan geçerken ekran bir an beyaz parlar
+  flash() {
+    const f = document.getElementById('flash');
+    f.style.transition = 'none';
+    f.style.opacity = 0.9;
+    requestAnimationFrame(() => { f.style.transition = 'opacity .8s'; f.style.opacity = 0; });
+  },
+
+  setWorld(world, far) {
+    this.world = world;
+    Player.moveToScene(this.currentScene());
+    Player.snapCamera = true;
+    camera.far = far;
+    camera.updateProjectionMatrix();
+    if (Hud.el.bigmapCanvas) Hud.el.bigmapCanvas.classList.add('hidden');
+  },
+
+  enterSpace() {
+    this.setWorld('space', SPACE_FAR);
+    Player.flying = true;
+    Player.airborne = false;
+    Space.arrive();
+    Hud.big('UZAY!');
+    Hud.msg('Gezegenlere uç! Dünya\'ya girersen eve dönersin.');
+  },
+
+  enterPlanet(p) {
+    PlanetWorld.enter(p);
+    // Gökyüzündeki halkalar ve aylar uzakta: görüş mesafesi okyanustakinden uzun
+    this.setWorld('planet', PLANET_FAR);
+    Hud.big(p.name.toUpperCase() + '!');
+    Hud.msg(p.fact + ' (Yukarı uçarsan uzaya dönersin)');
+  },
+
+  leavePlanet() {
+    const p = PlanetWorld.planet;
+    this.setWorld('space', SPACE_FAR);
+    const out = p.pos.clone().sub(Space.bodies[0].pos).normalize();
+    Player.pos.copy(p.pos).addScaledVector(out, p.r + 40 + Player.radius());
+    Player.vel.copy(out).multiplyScalar(20);
+    Player.yaw = Math.atan2(out.x, out.z);
+    Player.pitch = 0;
+    Hud.msg('Uzaya döndün.');
+  },
+
+  // Okyanusa dönüş: istasyondaki portaldan gizli portala, ya da Dünya'ya girip gökyüzünden
+  goOcean(how) {
+    this.setWorld('ocean', OCEAN_FAR);
+    World.underwater = null;
+    const F = Player.formDef();
+    if (how && how.portal) {
+      Portals.exitAt(Portals.secret);
+    } else {
+      Player.pos.set(SPAWN.x, 120, SPAWN.z);
+      Player.vel.set(0, -5, 0);
+      Player.pitch = -0.3;
+      Player.flying = !!F.alwaysFly;
+      Player.airborne = !F.alwaysFly;
+    }
+    if (how) Hud.big('DÜNYA!');
+  },
 
   // Vurulabilecek her şey: düşmanlar, kara hayvanları, gemiler. dist(p): yüzeyine uzaklık.
   targets() {
@@ -127,6 +196,8 @@ Enemies.init(scene);
 Land.init(scene);
 Ships.init(scene);
 Mysteries.init(scene);
+Portals.init(scene);
+Space.init();
 camera.position.copy(Player.pos).add(new THREE.Vector3(0, 4, -15));
 
 function showSaveInfo() {
@@ -167,7 +238,11 @@ const onButton = (id, action) => {
 };
 onButton('playBtn', startPlaying);
 onButton('resumeBtn', startPlaying);
-onButton('respawnBtn', () => { Player.respawn(); startPlaying(); });
+onButton('respawnBtn', () => {
+  if (Game.world !== 'ocean') Game.setWorld('ocean', OCEAN_FAR);
+  Player.respawn();
+  startPlaying();
+});
 onButton('resetBtn', () => {
   if (!confirm('Kayıtlı oyun silinsin mi?')) return;
   Save.reset();
@@ -264,21 +339,28 @@ function frame(now) {
     Game.time += dt;
     const t = Game.time;
     Player.update(dt);
-    Fish.update(dt, t);
-    Enemies.update(dt, t);
-    Land.update(dt);
-    Ships.update(dt, t);
-    Mysteries.update(dt, t);
+    if (Game.world === 'ocean') {
+      Fish.update(dt, t);
+      Enemies.update(dt, t);
+      Land.update(dt);
+      Ships.update(dt, t);
+      Mysteries.update(dt, t);
+      Portals.update(dt, t);
+      const inTrenchNow = Enemies.playerInTrench();
+      if (inTrenchNow && !Game.inTrench) {
+        Hud.big('MARİANA ÇUKURU');
+        Hud.msg('Karanlıkta tuhaf canlılar yaşıyor...');
+      }
+      Game.inTrench = inTrenchNow;
+    } else if (Game.world === 'space') {
+      Space.update(dt, t);
+    } else {
+      PlanetWorld.update(dt, t);
+    }
     Effects.update(dt);
     Player.updateCamera(camera, dt);
     Hud.update(dt, camera);
     if (touchControls) showTouchSwitches();
-    const inTrenchNow = Enemies.playerInTrench();
-    if (inTrenchNow && !Game.inTrench) {
-      Hud.big('MARİANA ÇUKURU');
-      Hud.msg('Karanlıkta tuhaf canlılar yaşıyor...');
-    }
-    Game.inTrench = inTrenchNow;
     Game.saveTimer -= dt;
     if (Game.saveTimer <= 0) { Save.write(); Game.saveTimer = 10; }
   } else if (Game.state === 'menu') {
@@ -288,8 +370,8 @@ function frame(now) {
     camera.lookAt(Player.pos);
     Player.updateModel(dt, 4, 0);
   }
-  World.update(now / 1000, camera, Game.state === 'playing' ? dt : 0);
+  if (Game.world === 'ocean') World.update(now / 1000, camera, Game.state === 'playing' ? dt : 0);
   Input.endFrame();
-  renderer.render(scene, camera);
+  renderer.render(Game.currentScene(), camera);
 }
 requestAnimationFrame(frame);

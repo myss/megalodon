@@ -85,7 +85,11 @@ const Hud = {
       st.style.background = '';
       st.style.visibility = P.stealthy ? 'visible' : 'hidden';
     }
-    if (P.pos.y > WATER_Y) {
+    if (Game.world === 'space') {
+      this.el.depth.textContent = '🚀 Uzay';
+    } else if (Game.world === 'planet') {
+      this.el.depth.textContent = '🪐 ' + PlanetWorld.planet.name;
+    } else if (P.pos.y > WATER_Y) {
       this.el.depth.textContent = 'Yükseklik: ' + Math.round(P.pos.y * 2) + ' m';
     } else {
       const meters = Math.max(0, Math.round(-P.pos.y * DEPTH_TO_METERS / 10) * 10);
@@ -119,10 +123,70 @@ const Hud = {
     }
 
     // Küçük harita: megalodonun çevresi. Büyük harita: bütün dünya.
-    this.drawMap(this.el.map, 190, Player.pos.x, Player.pos.z, 300, true);
-    if (!this.el.bigmapCanvas.classList.contains('hidden')) {
-      this.drawMap(this.el.bigmap, 560, 0, 0, WORLD_HALF, false);
+    const bigOpen = !this.el.bigmapCanvas.classList.contains('hidden');
+    if (Game.world === 'space') {
+      this.drawSpaceMap(this.el.map, 190, Player.pos.x, Player.pos.z, 900, true);
+      if (bigOpen) this.drawSpaceMap(this.el.bigmap, 560, 1400, 0, 1900, false);
+    } else if (Game.world === 'planet') {
+      this.drawPlanetMap(this.el.map, 190);
+      if (bigOpen) this.drawPlanetMap(this.el.bigmap, 560);
+    } else {
+      this.drawMap(this.el.map, 190, Player.pos.x, Player.pos.z, 300, true);
+      if (bigOpen) this.drawMap(this.el.bigmap, 560, 0, 0, WORLD_HALF, false);
     }
+  },
+
+  // Uzay haritası: Güneş, gezegenler ve istasyon yukarıdan
+  drawSpaceMap(g, S, cx, cz, range, round) {
+    const C = S / 2, k = (C - 6) / range;
+    const mx = (x) => C - (x - cx) * k, my = (z) => C - (z - cz) * k;
+    g.clearRect(0, 0, S, S);
+    g.save();
+    g.beginPath();
+    if (round) g.arc(C, C, C - 2, 0, Math.PI * 2); else g.rect(0, 0, S, S);
+    g.clip();
+    g.fillStyle = '#05061a';
+    g.fillRect(0, 0, S, S);
+    g.font = (round ? 10 : 13) + 'px Segoe UI, Arial';
+    g.textAlign = 'center';
+    for (const b of Space.bodies) {
+      const r = Math.max(b.r * k, round ? 3 : 4);
+      g.fillStyle = b.sun ? '#ffd040' : b.home ? '#3a8cff' : '#d8c8a8';
+      g.beginPath(); g.arc(mx(b.pos.x), my(b.pos.z), r, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#fff';
+      g.fillText(b.name, mx(b.pos.x), my(b.pos.z) + r + 11);
+    }
+    const st = Space.portal.pos;
+    g.fillStyle = '#ff60d0';
+    g.fillRect(mx(st.x) - 4, my(st.z) - 4, 8, 8);
+    g.fillStyle = '#fff';
+    g.fillText('İstasyon', mx(st.x), my(st.z) - 8);
+    this.drawPlayerArrow(g, mx(Player.pos.x), my(Player.pos.z), round);
+    g.restore();
+  },
+
+  drawPlanetMap(g, S) {
+    const C = S / 2, k = (C - 6) / PLANET_HALF;
+    g.clearRect(0, 0, S, S);
+    g.save();
+    g.fillStyle = '#' + new THREE.Color(PlanetWorld.planet.surface.palette[1]).getHexString();
+    g.fillRect(0, 0, S, S);
+    g.fillStyle = '#fff';
+    g.font = 'bold 14px Segoe UI, Arial';
+    g.textAlign = 'center';
+    g.fillText(PlanetWorld.planet.name, C, 22);
+    this.drawPlayerArrow(g, C - Player.pos.x * k, C - Player.pos.z * k, S < 300);
+    g.restore();
+  },
+
+  drawPlayerArrow(g, x, y, small) {
+    g.save();
+    g.translate(x, y);
+    g.rotate(Math.atan2(-Math.cos(Player.yaw), -Math.sin(Player.yaw)));
+    if (!small) g.scale(1.6, 1.6);
+    g.fillStyle = '#fff';
+    g.beginPath(); g.moveTo(7, 0); g.lineTo(-5, -5); g.lineTo(-2, 0); g.lineTo(-5, 5); g.closePath(); g.fill();
+    g.restore();
   },
 
   drawMap(g, S, cx, cz, range, round) {
@@ -230,13 +294,25 @@ const Hud = {
       g.fillRect(mx(s.pos.x) - sz / 2, my(s.pos.z) - sz / 2, sz, sz);
       g.strokeRect(mx(s.pos.x) - sz / 2, my(s.pos.z) - sz / 2, sz, sz);
     }
-    // Oyuncu oku
-    const px = mx(Player.pos.x), py = my(Player.pos.z);
-    g.translate(px, py);
-    g.rotate(Math.atan2(-Math.cos(Player.yaw), -Math.sin(Player.yaw)));
-    if (!round) g.scale(1.6, 1.6);
-    g.fillStyle = '#fff';
-    g.beginPath(); g.moveTo(7, 0); g.lineTo(-5, -5); g.lineTo(-2, 0); g.lineTo(-5, 5); g.closePath(); g.fill();
+    // Portallar renkleriyle; gizli portal ancak bulunduktan sonra (gökkuşağı halkası)
+    for (const p of Portals.list) {
+      if (p.secret && !Portals.secretFound()) continue;
+      const r = round ? 4 : 6;
+      const x = mx(p.pos.x), y = my(p.pos.z);
+      if (p.secret) {
+        RAINBOW.forEach((c, i) => {
+          g.strokeStyle = '#' + new THREE.Color(c).getHexString();
+          g.lineWidth = 2;
+          g.beginPath(); g.arc(x, y, r + 3 - i * 0.8, 0, Math.PI * 2); g.stroke();
+        });
+      } else {
+        g.fillStyle = '#' + new THREE.Color(p.color).getHexString();
+        g.strokeStyle = '#fff';
+        g.lineWidth = 1.5;
+        g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); g.stroke();
+      }
+    }
+    this.drawPlayerArrow(g, mx(Player.pos.x), my(Player.pos.z), round);
     g.restore();
   },
 };
