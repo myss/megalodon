@@ -145,6 +145,58 @@ function buildSkyIsland() {
   return { group: g, spin: statue.group };
 }
 
+// Anne megalodon: bizden kat kat büyük, karanlıkta seçilsin diye hafifçe parlar
+const MOTHER_SCALE = 6.5;
+const MOTHER_CIRCLE = 45;
+const MOTHER_NOTICE = 130;   // bu kadar yaklaşan megalodonu fark edip yanına gelir
+
+function buildMother() {
+  const shark = buildShark({ top: 0x4a5862, belly: 0xd8d6c8, dorsalH: 2.6 });
+  shark.group.traverse((o) => {
+    if (!o.isMesh) return;
+    const c = o.material.color.getHex();
+    if (c !== 0x111111) o.material = new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: 0.18 });
+  });
+  shark.group.rotation.order = 'YXZ';
+  shark.group.scale.setScalar(MOTHER_SCALE);
+  return { group: shark.group, shark, angle: 0, greeted: false };
+}
+
+// Çukurun derinliğinde ağır ağır daire çizer; megalodon yaklaşınca ona dönüp yanına gelir
+function updateMother(m, dt, t) {
+  const md = m.model, g = md.group, P = Player;
+  const toP = P.pos.clone().sub(g.position);
+  const d = toP.length();
+  let target, speed;
+  if (d < MOTHER_NOTICE) {
+    target = P.pos.clone().addScaledVector(toP.normalize(), -(MOTHER_SCALE * 5 + P.radius()));
+    speed = 7;
+  } else {
+    md.angle += dt * 0.08;
+    target = m.pos.clone().add(new THREE.Vector3(Math.cos(md.angle) * MOTHER_CIRCLE, Math.sin(t * 0.3) * 4, Math.sin(md.angle) * MOTHER_CIRCLE));
+    speed = 5;
+  }
+  const step = target.clone().sub(g.position);
+  if (step.length() > 1) {
+    const dir = step.clone().normalize();
+    g.position.addScaledVector(dir, Math.min(step.length(), speed * dt));
+    const look = d < MOTHER_NOTICE ? P.pos.clone().sub(g.position) : dir;
+    g.rotation.y = angleLerp(g.rotation.y, Math.atan2(look.x, look.z), 1 - Math.exp(-dt * 1.2));
+  }
+  g.position.y = Math.max(g.position.y, terrainHeight(g.position.x, g.position.z) + MOTHER_SCALE * 2);
+  md.shark.tail.rotation.y = Math.sin(t * 0.9) * 0.25;
+  md.shark.jaw.rotation.x = 0.05;
+
+  // İçinden geçilmesin; yanındayken annesi megalodonu iyileştirir
+  const minD = MOTHER_SCALE * 2.2 + P.radius();
+  if (d < minD && d > 0.01) P.pos.addScaledVector(P.pos.clone().sub(g.position).normalize(), minD - d);
+  if (d < 70 && !P.dead) {
+    P.hp = Math.min(P.maxHp, P.hp + 25 * dt);
+    P.hunger = Math.min(100, P.hunger + 10 * dt);
+    if (!md.greeted) { md.greeted = true; Hud.msg('Annen seni koruyor ve iyileştiriyor 💙'); }
+  } else if (d > 150) md.greeted = false;
+}
+
 function buildMapScroll() {
   const g = new THREE.Group();
   const paper = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 3.2, 12), glowMat(0xf2dfb0, 0.7));
@@ -207,6 +259,15 @@ const MYSTERIES = [
     mapAt: null,   // Kraken yenilince düşer
     build: buildSkyIsland,
   },
+  {
+    id: 'anne', name: 'Anne Megalodon', radius: 80, xp: 1000,
+    riddle: 'Çukurun derinliklerinde, senden çok daha büyük biri seni bekliyor.',
+    solved: 'Annen! Okyanusta kalan son megalodon değilmişsin.',
+    at: () => { const p = trenchCenter(0.8); return p.setY(terrainHeight(p.x, p.z) + 50); },
+    mapAt: () => new THREE.Vector3(6, 133, 1006),   // Gökyüzü Adası'nın üstünde
+    build: buildMother,
+    update: updateMother,
+  },
 ];
 
 function trenchCenter(u) {
@@ -229,6 +290,9 @@ const Mysteries = {
     this.syncScrolls();
     this.el = { panel: document.getElementById('mapNote'), canvas: document.getElementById('mapNoteCanvas'), text: document.getElementById('mapNoteText') };
   },
+
+  // Çukur canavarları anneden uzak durur
+  motherPos() { return MYSTERIES.find((m) => m.id === 'anne').model.group.position; },
 
   hasMap(id) { return Save.data.maps.includes(id); },
   isSolved(id) { return Save.data.mysteries.includes(id); },
@@ -312,6 +376,7 @@ const Mysteries = {
     const P = Player;
     for (const m of MYSTERIES) {
       const md = m.model;
+      if (m.update) m.update(m, dt, t);
       if (md.spin) md.spin.rotation.y += dt * 0.5;
       if (md.lights) md.lights.forEach((l, i) => { l.visible = Math.floor(t * 3 + i) % 3 !== 0; });
       if (md.crater && P.pos.distanceToSquared(m.pos) < 200 * 200 && Math.random() < dt * (this.isSolved(m.id) ? 12 : 4)) {

@@ -152,13 +152,17 @@ class Enemy {
       else this.state = 'wander';
       if (d > 100) this.angry = false;
     }
+    // Çukur canavarları anne megalodondan kaçar
+    const mother = Mysteries.motherPos();
+    const nearMother = T.trench && !T.drifter && this.pos.distanceToSquared(mother) < 120 * 120;
+    if (nearMother) this.state = 'flee';
 
     let dir, speed;
     if (this.state === 'chase') {
       dir = toP.clone().normalize();
       speed = T.speed;
     } else if (this.state === 'flee') {
-      dir = toP.clone().negate().setY(rand(-0.1, 0.1)).normalize();
+      dir = (nearMother ? this.pos.clone().sub(mother) : toP.clone().negate()).setY(rand(-0.1, 0.1)).normalize();
       speed = T.speed * 1.1;
     } else {
       if (this.pos.distanceTo(this.wanderTarget) < 5) this.wanderTarget = this.newWanderTarget();
