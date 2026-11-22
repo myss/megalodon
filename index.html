@@ -188,7 +188,7 @@
   <div id="floats"></div>
   <div id="forms"></div>
   <div id="voice" class="hidden"></div>
-  <div id="hint">Fare: yön · W: yüz · Q / Shift: hızlı · C: gizli yüz · Boşluk: atıl, havada uç · F / sol tık: ısır · 1-5: dönüş · V: sesli dönüş · M: harita · P / Esc: durdur</div>
+  <div id="hint">Fare: yön · W: yüz · Q / Shift: hızlı · C: gizli yüz · Boşluk: atıl, havada uç · F / sol tık: ısır · 1-5: dönüş · V: sesli dönüş · M: harita · N: ses · P / Esc: durdur</div>
 </div>
 
 <div id="touch-controls">
@@ -231,22 +231,25 @@
     <b>1 – 5</b><span>Dönüş: Megalodon, Robot, Kraken, Dev Kartal, Kollu Bacaklı</span>
     <b>V</b><span>Sesli dönüşüm: aç, sonra "robot", "kraken", "kartal"... de (Chrome/Edge, internet gerekir)</span>
     <b>M</b><span>Büyük harita</span>
+    <b>N</b><span>Sesi aç, kapat</span>
     <b>P / Esc</b><span>Durdur</span>
     <b>Home</b><span>Ekran düğmelerini aç, kapat</span>
   </div>
   <p class="touch-only">Soldaki oklarla yüz ve dön. Yukarı ya da aşağı gitmek için ▲'ya basılı tutarken sağdaki ⤴️ ⤵️'ye bas;
      kartalla yükselmek de böyle. ⬆️ atılır; sudan fırlamışken
      bir daha basınca uçarsın. 🦷 ısırır, 💨 hızlı yüzmeyi, 🤫 gizli yüzmeyi açar. 🦈 🤖 🦑 🦅 💪 ile dönüşürsün.
-     🗺️ büyük harita, 🎤 sesli dönüşüm, ⏸️ durdurur.</p>
+     🗺️ büyük harita, 🎤 sesli dönüşüm, ⏸️ durdurur. Sesi durdurunca çıkan ekrandan açıp kapatırsın.</p>
   <p>Balıkçı teknelerini ve <b>korsan gemisini</b> ısırarak batır. Uçarken üstlerine dal, parça pinçik olsunlar!
      Korsanlar top atar; batan korsan gemisinin hazinesini denizin dibinde bul.</p>
   <p>Haritadaki mor bölge <b>Mariana Çukuru</b>. Çok derine dal; orada karanlıkta parlayan tuhaf canlılar yaşıyor!</p>
+  <button id="muteBtnStart" class="small mute-button"></button>
   <button id="resetBtn" class="small">Kaydı sil</button>
 </div>
 
 <div id="pauseScreen" class="overlay hidden">
   <h1>DURAKLADI</h1>
   <button id="resumeBtn">DEVAM ET</button>
+  <button id="muteBtnPause" class="small mute-button"></button>
 </div>
 
 <div id="deathScreen" class="overlay hidden">

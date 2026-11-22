@@ -197,7 +197,21 @@ function pressKey(code) {
   Input.keys[code] = true;
 }
 
+// Ses düğmeleri sesin şimdiki hâlini gösterir
+function showMuteState() {
+  for (const b of document.querySelectorAll('.mute-button')) b.textContent = Sound.isMuted() ? '🔇 Ses: kapalı' : '🔊 Ses: açık';
+}
+function toggleMute() {
+  const muted = Sound.toggleMute();
+  showMuteState();
+  Hud.msg(muted ? 'Ses kapalı' : 'Ses açık');
+}
+showMuteState();
+onButton('muteBtnStart', toggleMute);
+onButton('muteBtnPause', toggleMute);
+
 function onKeyPressed(code) {
+  if (code === 'KeyN') { toggleMute(); return; }
   if (code === 'KeyP' || code === 'Escape') {
     if (Game.state === 'playing') {
       if (document.pointerLockElement) document.exitPointerLock();

@@ -1,10 +1,21 @@
 // Basit sentezlenmiş sesler (ses dosyası gerekmez)
+// Bütün sesler tek bir ana sesten geçer (Kaplan Macerası'ndaki gibi); N açıp kapatır, seçim hatırlanır.
+const MUTE_KEY = 'megalodon_muted';
+const MASTER_VOLUME = 0.4;
+
 const Sound = (() => {
-  let ctx = null;
+  let ctx = null, master = null;
+  let muted = false;
+  try { muted = localStorage.getItem(MUTE_KEY) === '1'; } catch (e) { /* yoksay */ }
 
   function ensure() {
     if (!ctx) {
-      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ctx = null; }
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        master = ctx.createGain();
+        master.gain.value = muted ? 0 : MASTER_VOLUME;
+        master.connect(ctx.destination);
+      } catch (e) { ctx = null; }
     }
     if (ctx && ctx.state === 'suspended') ctx.resume();
     return ctx;
@@ -21,7 +32,7 @@ const Sound = (() => {
     const f = c.createBiquadFilter();
     f.type = 'lowpass'; f.frequency.value = freq; f.Q.value = q || 1;
     const g = c.createGain(); g.gain.value = volume;
-    src.connect(f); f.connect(g); g.connect(c.destination);
+    src.connect(f); f.connect(g); g.connect(master);
     src.start();
   }
 
@@ -34,12 +45,19 @@ const Sound = (() => {
     const g = c.createGain();
     g.gain.setValueAtTime(volume, t0);
     g.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
-    o.connect(g); g.connect(c.destination);
+    o.connect(g); g.connect(master);
     o.start(t0); o.stop(t0 + duration);
   }
 
   return {
     unlock: ensure,
+    isMuted: () => muted,
+    toggleMute() {
+      muted = !muted;
+      if (master) master.gain.value = muted ? 0 : MASTER_VOLUME;
+      try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch (e) { /* yoksay */ }
+      return muted;
+    },
     bite() { noise(0.15, 900, 0.5, 2); tone(90, 0.15, 0.3, 'square'); },
     hit() { noise(0.25, 500, 0.6); },
     hurt() { tone(160, 0.3, 0.25, 'sawtooth'); tone(110, 0.3, 0.2, 'sawtooth', 0.05); },

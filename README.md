@@ -43,6 +43,7 @@ Okyanusta gizemler saklı. Ne olduklarını burada söylemiyoruz. Her gizemin, �
 | 1 – 5 | Dönüşür: megalodon, robot megalodon, kraken, dev kartal, kollu bacaklı megalodon |
 | V | Sesli dönüşümü açar, kapatır: "robot", "kraken", "kartal" demek yetiyor (Chrome ya da Edge ister, internet gerekir) |
 | M | Büyük haritayı açar, kapatır |
+| N | Sesi açar, kapatır |
 | P / Esc | Oyunu durdurur |
 | Home | Ekran düğmelerini açar, kapatır |
 
@@ -120,6 +121,7 @@ Double-click `index.html`. There is nothing to install. The game saves your leve
 | 1 – 5 | Transform: megalodon, robot megalodon, kraken, giant eagle, megalodon with arms and legs |
 | V | Voice transformation on or off: just say "robot", "kraken", "kartal" (needs Chrome or Edge and an internet connection) |
 | M | Big map on or off |
+| N | Sound on or off |
 | P / Esc | Pause |
 | Home | Show or hide the on-screen buttons |
 
