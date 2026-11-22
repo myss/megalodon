@@ -52,6 +52,7 @@ Okyanusta gizemler saklı. Ne olduklarını burada söylemiyoruz. Her gizemin, �
 | N | Sesi açar, kapatır |
 | P / Esc | Oyunu durdurur |
 | Home | Ekran düğmelerini açar, kapatır |
+| Shift+G (hile) | Gizli gökkuşağı portalının önüne ışınlar |
 
 Fare olmayan cihazlarda ekran düğmeleri kendiliğinden çıkıyor. Farenin de olduğu cihazlarda ise ekrana ilk dokunuşta açılıyor.
 
@@ -138,6 +139,7 @@ Double-click `index.html`. There is nothing to install. The game saves your leve
 | N | Sound on or off |
 | P / Esc | Pause |
 | Home | Show or hide the on-screen buttons |
+| Shift+G (cheat) | Takes you in front of the hidden rainbow portal |
 
 On-screen buttons appear by themselves on devices without a mouse. On devices that also have a mouse, they appear at the first touch.
 

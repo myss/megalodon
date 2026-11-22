@@ -67,6 +67,25 @@ const Game = {
     Hud.msg('Uzaya döndün.');
   },
 
+  // Hile (Shift+G): gökkuşağı portalının önüne, ona dönük ışınlanır; içine kendisi yüzer
+  cheatToRainbowPortal() {
+    if (this.world !== 'ocean') { this.setWorld('ocean', OCEAN_FAR); World.underwater = null; }
+    const s = Portals.secret, P = Player;
+    // Portal suyun altında; suya giremeyen kartal önce megalodona döner
+    if (P.formDef().alwaysFly) P.transform('megalodon');
+    P.pos.copy(s.pos).addScaledVector(s.normal, -30);
+    P.pos.y = Math.max(P.pos.y, terrainHeight(P.pos.x, P.pos.z) + 2 * P.scale);
+    P.vel.set(0, 0, 0);
+    P.yaw = s.yaw;
+    P.pitch = 0;
+    P.airborne = false;
+    if (!P.formDef().alwaysFly) P.flying = false;
+    P.snapCamera = true;
+    Portals.cooldown = PORTAL_COOLDOWN;
+    this.flash();
+    Hud.msg('Hile: gökkuşağı portalının önündesin! 🌈');
+  },
+
   // Okyanusa dönüş: istasyondaki portaldan gizli portala, ya da Dünya'ya girip gökyüzünden
   goOcean(how) {
     this.setWorld('ocean', OCEAN_FAR);
@@ -305,6 +324,8 @@ function onKeyPressed(code) {
 
 window.addEventListener('keydown', (e) => {
   if (GAME_KEYS.includes(e.code)) e.preventDefault();
+  // Hile kombinasyonu: Shift+G gökkuşağı portalının önüne ışınlar
+  if (e.code === 'KeyG' && e.shiftKey && !e.repeat && Game.state === 'playing') Game.cheatToRainbowPortal();
   pressKey(e.code);
 });
 window.addEventListener('keyup', (e) => { Input.keys[e.code] = false; });
