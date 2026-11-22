@@ -53,6 +53,7 @@ const Sound = (() => {
     laser() { tone(1400, 0.12, 0.12, 'sawtooth'); tone(700, 0.15, 0.1, 'square', 0.03); },
     tentacle() { noise(0.4, 600, 0.6, 2); tone(90, 0.3, 0.25, 'triangle'); },
     transform() { [392, 523, 659, 880, 1175].forEach((f, i) => tone(f, 0.25, 0.14, 'sine', i * 0.06)); noise(0.5, 3000, 0.25); },
+    mystery() { [392, 494, 587, 784, 988, 1175].forEach((f, i) => tone(f, 0.5, 0.15, 'triangle', i * 0.12)); noise(1.2, 4000, 0.15); },
     alert() { tone(880, 0.12, 0.12, 'square'); tone(660, 0.15, 0.12, 'square', 0.12); },
   };
 })();

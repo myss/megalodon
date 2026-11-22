@@ -20,6 +20,7 @@ const Hud = {
       targetName: $('targetName'),
       targetBar: $('targetBar').firstElementChild,
       depth: $('depth'),
+      mysteryCount: $('mysteryCount'),
       forms: $('forms'),
       map: $('minimap').getContext('2d'),
       bigmapCanvas: $('bigmap'),
@@ -69,6 +70,11 @@ const Hud = {
     this.el.hp.style.width = (100 * P.hp / P.maxHp) + '%';
     this.el.food.style.width = P.hunger + '%';
     this.el.stam.style.width = P.stamina + '%';
+    // Dokunmatik ekranda panel dar: kısa yazılır ki tek satıra sığsın
+    const n = MYSTERIES.length;
+    this.el.mysteryCount.textContent = touchControls
+      ? '❓ ' + Save.data.mysteries.length + '/' + n + ' · 📜 ' + Save.data.maps.length + '/' + n
+      : '❓ Gizem ' + Save.data.mysteries.length + '/' + n + ' · 📜 Harita ' + Save.data.maps.length + '/' + n;
     const st = this.el.stealth;
     if (P.flying) {
       st.textContent = 'UÇUYORSUN';
@@ -176,6 +182,40 @@ const Hud = {
         g.translate(C + Math.cos(ang) * (C - 12), C + Math.sin(ang) * (C - 12));
         g.rotate(ang);
         g.fillStyle = '#c070ff';
+        g.beginPath(); g.moveTo(8, 0); g.lineTo(-6, -7); g.lineTo(-6, 7); g.closePath(); g.fill();
+        g.restore();
+      }
+    }
+    // Haritası bulunan gizem kırmızı X, çözülen gizem altın yıldız
+    for (const m of MYSTERIES) {
+      const x = mx(m.pos.x), y = my(m.pos.z);
+      if (Mysteries.isSolved(m.id)) {
+        g.fillStyle = '#ffd040';
+        g.font = (round ? 14 : 20) + 'px Segoe UI, Arial';
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillText('★', x, y);
+      } else if (Mysteries.hasMap(m.id)) {
+        const s = round ? 4 : 6;
+        g.strokeStyle = '#ff3030';
+        g.lineWidth = 3;
+        g.beginPath(); g.moveTo(x - s, y - s); g.lineTo(x + s, y + s); g.moveTo(x + s, y - s); g.lineTo(x - s, y + s); g.stroke();
+      }
+    }
+    if (round) {
+      // Haritası bulunmuş, henüz çözülmemiş en yakın gizem görünmüyorsa kenarda altın ok
+      let target = null, best = Infinity;
+      for (const m of MYSTERIES) {
+        if (!Mysteries.hasMap(m.id) || Mysteries.isSolved(m.id)) continue;
+        const d = Math.hypot(m.pos.x - cx, m.pos.z - cz);
+        if (d < best) { best = d; target = m; }
+      }
+      if (target && best > range * 0.9) {
+        const ang = Math.atan2(my(target.pos.z) - C, mx(target.pos.x) - C);
+        g.save();
+        g.translate(C + Math.cos(ang) * (C - 12), C + Math.sin(ang) * (C - 12));
+        g.rotate(ang);
+        g.fillStyle = '#ffd040';
         g.beginPath(); g.moveTo(8, 0); g.lineTo(-6, -7); g.lineTo(-6, 7); g.closePath(); g.fill();
         g.restore();
       }

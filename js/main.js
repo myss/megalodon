@@ -126,13 +126,15 @@ Fish.init(scene);
 Enemies.init(scene);
 Land.init(scene);
 Ships.init(scene);
+Mysteries.init(scene);
 camera.position.copy(Player.pos).add(new THREE.Vector3(0, 4, -15));
 
 function showSaveInfo() {
   const d = Save.data;
   document.getElementById('saveInfo').textContent = d.level > 1 || d.kills > 0
     ? 'Kayıtlı oyun: Seviye ' + d.level + ' · Yendiğin düşman: ' + d.kills + ' · Avladığın kara hayvanı: ' + d.eaten +
-      ' · Batırdığın gemi: ' + d.sunk + ' · Hazine: ' + d.treasures
+      ' · Batırdığın gemi: ' + d.sunk + ' · Hazine: ' + d.treasures +
+      ' · Gizem: ' + d.mysteries.length + '/' + MYSTERIES.length
     : '';
 }
 showSaveInfo();
@@ -174,6 +176,7 @@ onButton('resetBtn', () => {
   Player.form = 'megalodon';
   Player.buildModel();
   Player.respawn();
+  Mysteries.syncScrolls();
   showSaveInfo();
 });
 
@@ -251,6 +254,7 @@ function frame(now) {
     Enemies.update(dt, t);
     Land.update(dt);
     Ships.update(dt, t);
+    Mysteries.update(dt, t);
     Effects.update(dt);
     Player.updateCamera(camera, dt);
     Hud.update(dt, camera);

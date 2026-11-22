@@ -516,6 +516,7 @@ const Ships = {
       if (mouth.distanceTo(m.position) < 4 + P.scale * 1.3 || P.pos.distanceTo(m.position) < P.radius() + 3) {
         P.addXp(250);
         Save.data.treasures++;
+        Mysteries.giveMap('yanardag');
         Sound.levelUp();
         Hud.big('HAZİNE BULDUN!');
         Hud.float('+250 XP', m.position, '#ffd040');

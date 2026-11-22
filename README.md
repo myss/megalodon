@@ -21,6 +21,10 @@ Tek ve kocaman bir okyanus:
 - **Gemiler:** Balıkçı tekneleri megalodondan kaçıyor. Korsan gemisi ise onu kovalayıp top atıyor. Batan korsan gemisinin hazine sandığı denizin dibine iniyor.
 - **Mariana Çukuru:** Yaklaşık 11.000 metre derinliğinde, dik duvarlı bir kanyon. Aşağı indikçe ortalık kararıyor. Dipte parlayan tüp solucanları ve sıcak su bacaları var. Fener balıkları, engerek balıkları, goblin köpekbalıkları, vampir kalamarlar, dev izopodlar ve dumbo ahtapotları yalnızca burada yaşıyor. Çukurun boss'u da Kraken.
 
+## Gizemler
+
+Okyanusta gizemler saklı. Ne olduklarını burada söylemiyoruz. Her gizemin, çok zor bir yere saklanmış tek bir haritası var. Harita bulununca gizemin yeri işaretleniyor, ama dolaşarak haritasız bulmak da mümkün. Hepsini çözene bir sürpriz var.
+
 ## Nasıl oynanır?
 
 `index.html` dosyasına çift tıklamanız yeterli, bir şey kurmanıza gerek yok. Oyun seviyeyi ve seçilen dönüşümü tarayıcıya kaydediyor.
@@ -56,6 +60,7 @@ Düz JavaScript ve [Three.js](https://threejs.org) kullanıldı, derlemeye gerek
 - `js/fish.js`: Balık sürüleri.
 - `js/land.js`: Kıyıya su içmeye gelen kara hayvanları.
 - `js/ships.js`: Balıkçı tekneleri, korsan gemisi, top gülleleri, parçalanma ve hazine.
+- `js/mysteries.js`: Gizemler ve haritaları (içine bakarsanız sürpriz bozulur).
 - `js/effects.js`: Kan bulutu, kabarcık, su sıçraması ve lazer.
 - `js/hud.js`: Ekrandaki göstergeler, mesajlar ve haritalar.
 - `js/voice.js`: Sesli dönüşüm.
@@ -92,6 +97,10 @@ One huge ocean. The in-game text is Turkish:
 - **The open sea:** sharks, barracudas, giant squids, giant octopuses, jellyfish, killer whales and sperm whales, and a mosasaur at higher levels; turtles, tuna and schools of fish are prey
 - **The ships:** fishing boats flee the megalodon, while the pirate ship chases it and fires its cannons; a sunk pirate ship's treasure chest sinks to the bottom
 - **The Mariana Trench:** a steep canyon about 11,000 metres deep that grows darker on the way down, with glowing tube worms and hydrothermal vents at the bottom; anglerfish, viperfish, goblin sharks, vampire squids, giant isopods and dumbo octopuses live only here, and the Kraken is its boss
+
+## Mysteries
+
+The ocean hides mysteries, and we are not saying here what they are. Each has a single map hidden somewhere very hard to reach. A map marks where its mystery is, but you can also stumble on one without it. Solving them all brings a surprise.
 
 ## Playing
 

@@ -275,6 +275,7 @@ class Enemy {
     Player.addXp(this.type.xp);
     Player.eat(this.type.food);
     Save.data.kills++;
+    if (this.key === 'kraken') Mysteries.giveMap('gokada');
     Sound.eat();
     Hud.msg((this.type.passive ? 'Avladın: ' : 'Yendin: ') + this.name + '  +' + this.type.xp + ' XP');
     Hud.float('+' + this.type.xp + ' XP', this.pos, '#8fe3ff');

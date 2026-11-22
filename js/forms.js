@@ -187,7 +187,10 @@ const FORMS = {
   megalodon: {
     name: 'Megalodon', modelScale: 1, hpMul: 1, dmgMul: 1, speedMul: 1, armor: 1, flyDrain: 4,
     attack: 'bite', color: 0x8fe3ff, hint: 'Sol tık: ısır',
-    build: () => buildShark({ top: 0x56656f, belly: 0xe4e2d4, dorsalH: 2.4 }),
+    // Bütün gizemler çözülünce megalodon altın olur
+    build: () => Mysteries.allSolved()
+      ? buildShark({ top: 0xd4a62a, belly: 0xffe9a0, dorsalH: 2.4 })
+      : buildShark({ top: 0x56656f, belly: 0xe4e2d4, dorsalH: 2.4 }),
   },
   robot: {
     name: 'Robot Megalodon', modelScale: 1, hpMul: 1.3, dmgMul: 0.8, speedMul: 1.1, armor: 0.5, flyDrain: 2,

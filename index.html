@@ -20,6 +20,10 @@
   #foodBar > div { background: #f0a030; }
   #stamBar > div { background: #f5e050; }
   #depth { margin-top: 6px; font-size: 13px; font-weight: 600; }
+  #mysteryCount { margin-top: 6px; font-size: 13px; font-weight: 600; color: #ffe080; }
+  #mapNote { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(320px, 60vw, 60vh); padding: 10px; border-radius: 12px; background: #5a3a1ecc; text-align: center; }
+  #mapNote canvas { width: 100%; height: auto; display: block; border-radius: 6px; }
+  #mapNoteText { margin-top: 8px; font-size: 15px; font-weight: 700; font-style: italic; color: #fff0c8; text-shadow: 0 1px 2px #000; }
   #bigmap { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, 90vw, 80vh); height: min(560px, 90vw, 80vh); border-radius: 14px; border: 3px solid rgba(255,255,255,.6); background: rgba(0,30,55,.85); }
   #stealth { margin-top: 6px; font-size: 13px; font-weight: 700; padding: 3px 8px; border-radius: 6px; display: inline-block; background: rgba(40,160,90,.75); visibility: hidden; }
 
@@ -69,6 +73,8 @@
   body.touch .bar { height: 9px; margin: 3px 0; }
   body.touch .bar > span { font-size: 8px; top: -2px; }
   body.touch #depth, body.touch #stealth { display: inline-block; margin-top: 3px; font-size: 11px; }
+  body.touch #mysteryCount { margin-top: 3px; font-size: 11px; }
+  body.touch #mapNoteText { font-size: 12px; }
   body.touch #stealth { margin-left: 6px; padding: 1px 6px; }
   body.touch #minimap { top: 8px; right: 8px; width: 120px; height: 120px; }
   body.touch #target { width: 200px; }
@@ -125,6 +131,8 @@
   }
   @media (orientation: landscape) and (max-height: 340px) {
     body.touch #messages { bottom: 8px; max-width: calc(100vw - 490px); }
+    body.touch .bar { height: 7px; margin: 2px 0; }
+    body.touch .bar > span { font-size: 7px; top: -2px; }
     #touch-pad { left: 14px; bottom: 10px; width: 150px; height: 150px; }
     #touch-pad span { width: 48px; height: 48px; font-size: 26px; }
     #touch-pad [data-arrow="KeyW"] { top: 2px; left: 48px; }
@@ -167,6 +175,7 @@
     <div class="bar" id="hpBar"><div></div><span>Can</span></div>
     <div class="bar" id="foodBar"><div></div><span>Açlık</span></div>
     <div class="bar" id="stamBar"><div></div><span>Enerji</span></div>
+    <div id="mysteryCount"></div>
     <div id="depth">Derinlik: 0 m</div>
     <div id="stealth">GİZLİ</div>
   </div>
@@ -174,6 +183,7 @@
   <canvas id="bigmap" width="560" height="560" class="hidden"></canvas>
   <div id="target"><div id="targetName"></div><div class="bar" id="targetBar"><div></div></div></div>
   <div id="crosshair"></div>
+  <div id="mapNote" class="hidden"><canvas id="mapNoteCanvas" width="300" height="300"></canvas><div id="mapNoteText"></div></div>
   <div id="messages"></div>
   <div id="floats"></div>
   <div id="forms"></div>
@@ -259,6 +269,7 @@
 <script src="js/enemies.js"></script>
 <script src="js/land.js"></script>
 <script src="js/ships.js"></script>
+<script src="js/mysteries.js"></script>
 <script src="js/hud.js"></script>
 <script src="js/touch.js"></script>
 <script src="js/main.js"></script>
